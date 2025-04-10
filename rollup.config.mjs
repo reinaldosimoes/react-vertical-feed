@@ -4,6 +4,9 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import dts from 'rollup-plugin-dts';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const isAnalyze = process.env.analyze === 'true';
 
 const config = [
   {
@@ -29,7 +32,14 @@ const config = [
         exclude: ['**/__tests__/**'],
       }),
       postcss(),
-    ],
+      isAnalyze &&
+        visualizer({
+          filename: 'dist/bundle-analysis.html',
+          open: true,
+          gzipSize: true,
+          brotliSize: true,
+        }),
+    ].filter(Boolean),
     external: ['react', 'react-dom'],
   },
   {

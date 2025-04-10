@@ -83,7 +83,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
     mediaElements.forEach(media => observer.observe(media));
 
     return () => {
-      mediaElements.forEach(media => observer.unobserve(media));
+      observer.disconnect();
     };
   }, [items, onItemVisible, onItemHidden, threshold]);
 
@@ -101,6 +101,8 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
 
       const { scrollTop, clientHeight } = containerRef.current;
       const scrollAmount = clientHeight;
+
+      if (!containerRef.current.scrollTo) return;
 
       switch (e.key) {
         case 'ArrowDown':
