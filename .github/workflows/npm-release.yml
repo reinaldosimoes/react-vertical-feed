@@ -1,0 +1,55 @@
+name: Create GitHub Release on npm Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  create-github-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get package version
+        id: package-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ steps.package-version.outputs.version }}
+          tag_name: v${{ steps.package-version.outputs.version }}
+          body: |
+            ## What's Changed
+
+            ### Features
+            - Add new features
+
+            ### Bug Fixes
+            - Fix bugs
+
+            ### Dependencies
+            - Update dependencies
+
+            ### Documentation
+            - Update documentation
+
+            ### Chores
+            - Maintenance tasks
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
