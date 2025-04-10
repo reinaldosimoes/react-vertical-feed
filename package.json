@@ -1,7 +1,7 @@
 {
-  "name": "react-vertical-video-feed",
+  "name": "react-vertical-feed",
   "version": "0.1.0",
-  "description": "A React component for creating vertical video feeds similar to TikTok or Instagram Reels",
+  "description": "A React component for creating vertical media feeds (videos and images) similar to TikTok or Instagram",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -15,18 +15,22 @@
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src --ext .ts,.tsx",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "react",
-    "video",
+    "media",
     "feed",
     "vertical",
     "tiktok",
     "instagram",
     "reels",
     "scroll",
-    "component"
+    "component",
+    "video",
+    "image"
   ],
   "author": "reinaldosimoes",
   "license": "MIT",
@@ -38,6 +42,9 @@
     "url": "https://github.com/reinaldosimoes/react-vertical-feed/issues"
   },
   "homepage": "https://github.com/reinaldosimoes/react-vertical-feed#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-dom": ">=17.0.0"
