@@ -6,6 +6,22 @@
 
 A React component for creating vertical video feeds similar to TikTok or Instagram. This component provides a smooth, performant way to display vertical videos with automatic play/pause based on visibility.
 
+## Table of Contents
+
+- [React Vertical Feed](#react-vertical-feed)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [API Reference](#api-reference)
+    - [Props](#props)
+    - [Types](#types)
+  - [Browser Compatibility](#browser-compatibility)
+  - [Performance](#performance)
+  - [Development](#development)
+    - [Test Coverage](#test-coverage)
+  - [License](#license)
+
 ## Features
 
 - 🎥 Automatic video play/pause based on visibility
@@ -58,7 +74,9 @@ const App = () => {
 };
 ```
 
-## Props
+## API Reference
+
+### Props
 
 | Prop               | Type                                       | Default      | Description                             |
 | ------------------ | ------------------------------------------ | ------------ | --------------------------------------- |
@@ -74,7 +92,7 @@ const App = () => {
 | `threshold`        | `number`                                   | `0.75`       | Intersection observer threshold         |
 | `scrollBehavior`   | `ScrollBehavior`                           | `'smooth'`   | Scroll behavior for keyboard navigation |
 
-### VideoItem Type
+### Types
 
 ```typescript
 interface VideoItem {
@@ -87,6 +105,32 @@ interface VideoItem {
   playsInline?: boolean;
 }
 ```
+
+## Browser Compatibility
+
+This package is compatible with all modern browsers that support:
+
+- Intersection Observer API
+- CSS Scroll Snap
+- HTML5 Video
+
+| Browser | Version |
+| ------- | ------- |
+| Chrome  | 51+     |
+| Firefox | 55+     |
+| Safari  | 12.1+   |
+| Edge    | 16+     |
+| Opera   | 38+     |
+
+## Performance
+
+The component is optimized for performance with:
+
+- Lazy loading of videos
+- Automatic cleanup of resources
+- Efficient intersection observer usage
+- Minimal re-renders
+- Optimized scroll handling
 
 ## Development
 
@@ -124,29 +168,3 @@ Test coverage reports are generated for each pull request and can be found in th
 ## License
 
 MIT © [reinaldosimoes](https://github.com/reinaldosimoes)
-
-## Browser Compatibility
-
-This package is compatible with all modern browsers that support:
-
-- Intersection Observer API
-- CSS Scroll Snap
-- HTML5 Video
-
-| Browser | Version |
-| ------- | ------- |
-| Chrome  | 51+     |
-| Firefox | 55+     |
-| Safari  | 12.1+   |
-| Edge    | 16+     |
-| Opera   | 38+     |
-
-## Performance
-
-The component is optimized for performance with:
-
-- Lazy loading of videos
-- Automatic cleanup of resources
-- Efficient intersection observer usage
-- Minimal re-renders
-- Optimized scroll handling
