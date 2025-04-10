@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.15](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.14...v0.1.15) (2025-04-10)
+
 ### [0.1.12](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.11...v0.1.12) (2025-04-10)
 
 ### [0.1.11](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.9...v0.1.11) (2025-04-10)
