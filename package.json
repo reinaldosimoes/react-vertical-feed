@@ -1,7 +1,7 @@
 {
   "name": "react-vertical-feed",
-  "version": "0.1.4",
-  "description": "A React component for creating vertical media feeds (videos and images) similar to TikTok or Instagram",
+  "version": "0.1.5",
+  "description": "A React component for creating vertical media feeds (videos) similar to TikTok or Instagram",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
