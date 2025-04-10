@@ -9,6 +9,8 @@ on:
       - 'src/**'
       - 'rollup.config.mjs'
       - 'tsconfig.json'
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -36,11 +38,13 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
+        if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
