@@ -31,6 +31,7 @@ A React component for creating vertical video feeds similar to TikTok or Instagr
 - 🎨 Customizable loading and error states
 - ⚡️ Performance optimized
 - 📦 TypeScript support
+- 🌐 [Live Demo](https://reinaldosimoes.github.io/react-vertical-feed/)
 
 ## Installation
 
