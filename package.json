@@ -35,10 +35,11 @@
     "tiktok",
     "instagram",
     "reels",
+    "youtube",
+    "shorts",
     "scroll",
     "component",
-    "video",
-    "image"
+    "video"
   ],
   "author": "reinaldosimoes",
   "license": "MIT",
