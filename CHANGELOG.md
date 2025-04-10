@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.11](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.9...v0.1.11) (2025-04-10)
+
+
+### Features
+
+* add CodeSandbox demo example ([75eb134](https://github.com/reinaldosimoes/react-vertical-feed/commit/75eb134d34955605dadf5458a551746b81639cba))
+
+
+### Bug Fixes
+
+* prevent double v prefix in GitHub releases ([fa05082](https://github.com/reinaldosimoes/react-vertical-feed/commit/fa05082c6e6489e4e32a7dacff13204e4905c10f))
+* update demo package.json with correct local dependency path ([f228ab7](https://github.com/reinaldosimoes/react-vertical-feed/commit/f228ab7348368e3e6fe06008177e244f450fede6))
+
 ### [0.1.9](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.8...v0.1.9) (2025-04-10)
 
 
