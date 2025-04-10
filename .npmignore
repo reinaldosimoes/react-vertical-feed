@@ -1,0 +1,11 @@
+src/
+node_modules/
+*.config.js
+*.test.*
+.git/
+.gitignore
+.eslintrc.json
+.prettierrc
+vite.config.ts
+README.md
+LICENSE
