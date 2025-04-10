@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 
-export interface MediaItem {
-  type: 'video' | 'image';
+export interface VideoItem {
   src: string;
   id?: string;
   metadata?: Record<string, unknown>;
@@ -11,37 +10,16 @@ export interface MediaItem {
   playsInline?: boolean;
 }
 
-export interface VideoItem extends MediaItem {
-  type: 'video';
-  controls?: boolean;
-  autoPlay?: boolean;
-  muted?: boolean;
-  playsInline?: boolean;
-}
-
-export interface ImageItem extends MediaItem {
-  type: 'image';
-}
-
-export type MediaItemType = VideoItem | ImageItem;
-
 export interface VerticalFeedProps {
-  items: MediaItemType[];
+  items: VideoItem[];
   onEndReached?: () => void;
-  showControls?: boolean;
   loadingComponent?: React.ReactNode;
   errorComponent?: React.ReactNode;
-  mediaProps?: {
-    video?: React.VideoHTMLAttributes<HTMLVideoElement>;
-    image?: React.ImgHTMLAttributes<HTMLImageElement>;
-  };
-  renderItem?: (item: MediaItemType, index: number) => React.ReactNode;
-  itemHeight?: string | number;
   className?: string;
   style?: React.CSSProperties;
-  onItemVisible?: (item: MediaItemType, index: number) => void;
-  onItemHidden?: (item: MediaItemType, index: number) => void;
-  onItemClick?: (item: MediaItemType, index: number) => void;
+  onItemVisible?: (item: VideoItem, index: number) => void;
+  onItemHidden?: (item: VideoItem, index: number) => void;
+  onItemClick?: (item: VideoItem, index: number) => void;
   threshold?: number;
   scrollBehavior?: ScrollBehavior;
 }
@@ -49,12 +27,8 @@ export interface VerticalFeedProps {
 export const VerticalFeed: React.FC<VerticalFeedProps> = ({
   items,
   onEndReached,
-  showControls = false,
   loadingComponent,
   errorComponent,
-  mediaProps = {},
-  renderItem,
-  itemHeight = '100vh',
   className,
   style,
   onItemVisible,
@@ -84,21 +58,17 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
           const item = items[index];
 
           if (entry.isIntersecting) {
-            if (item.type === 'video') {
-              const video = entry.target.querySelector('video') as HTMLVideoElement;
-              if (video) {
-                video.play().catch(error => {
-                  console.error('Error playing video:', error);
-                });
-              }
+            const video = entry.target.querySelector('video') as HTMLVideoElement;
+            if (video) {
+              video.play().catch(error => {
+                console.error('Error playing video:', error);
+              });
             }
             onItemVisible?.(item, index);
           } else {
-            if (item.type === 'video') {
-              const video = entry.target.querySelector('video') as HTMLVideoElement;
-              if (video) {
-                video.pause();
-              }
+            const video = entry.target.querySelector('video') as HTMLVideoElement;
+            if (video) {
+              video.pause();
             }
             onItemHidden?.(item, index);
           }
@@ -151,7 +121,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
   );
 
   const defaultRenderItem = useCallback(
-    (item: MediaItemType, index: number) => {
+    (item: VideoItem, index: number) => {
       const isLoading = loadingStates[index] ?? true;
       const hasError = errorStates[index] ?? false;
 
@@ -161,46 +131,31 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
           data-index={index}
           onClick={() => onItemClick?.(item, index)}
           style={{
-            height: itemHeight,
+            height: '100vh',
             scrollSnapAlign: 'start',
             position: 'relative',
             cursor: onItemClick ? 'pointer' : 'default',
           }}
           role="region"
-          aria-label={`${item.type} ${index + 1}`}
+          aria-label={`video ${index + 1}`}
         >
           {isLoading && loadingComponent}
           {hasError && errorComponent}
-          {item.type === 'video' ? (
-            <video
-              src={item.src}
-              muted
-              playsInline
-              controls={showControls}
-              onLoadedData={() => handleMediaLoad(index)}
-              onError={() => handleMediaError(index)}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: isLoading || hasError ? 'none' : 'block',
-              }}
-              {...mediaProps.video}
-            />
-          ) : (
-            <img
-              src={item.src}
-              onLoad={() => handleMediaLoad(index)}
-              onError={() => handleMediaError(index)}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: isLoading || hasError ? 'none' : 'block',
-              }}
-              {...mediaProps.image}
-            />
-          )}
+          <video
+            src={item.src}
+            muted={item.muted ?? true}
+            playsInline={item.playsInline ?? true}
+            controls={item.controls ?? false}
+            autoPlay={item.autoPlay ?? true}
+            onLoadedData={() => handleMediaLoad(index)}
+            onError={() => handleMediaError(index)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: isLoading || hasError ? 'none' : 'block',
+            }}
+          />
         </div>
       );
     },
@@ -209,9 +164,6 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
       errorStates,
       loadingComponent,
       errorComponent,
-      showControls,
-      mediaProps,
-      itemHeight,
       handleMediaLoad,
       handleMediaError,
       onItemClick,
@@ -219,11 +171,8 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
   );
 
   const mediaElements = useMemo(
-    () =>
-      items.map((item, index) =>
-        renderItem ? renderItem(item, index) : defaultRenderItem(item, index)
-      ),
-    [items, renderItem, defaultRenderItem]
+    () => items.map((item, index) => defaultRenderItem(item, index)),
+    [items, defaultRenderItem]
   );
 
   return (
@@ -233,7 +182,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="feed"
-      aria-label="Vertical media feed"
+      aria-label="Vertical video feed"
       className={className}
       style={{
         height: '100vh',

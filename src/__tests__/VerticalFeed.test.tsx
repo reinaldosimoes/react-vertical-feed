@@ -1,16 +1,42 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { VerticalFeed, MediaItem } from '../VerticalFeed';
+import { VerticalFeed, VideoItem } from '../VerticalFeed';
+
+// Mock IntersectionObserver
+const mockIntersectionObserver = jest.fn();
+mockIntersectionObserver.mockReturnValue({
+  observe: () => null,
+  unobserve: () => null,
+  disconnect: () => null,
+});
+window.IntersectionObserver = mockIntersectionObserver;
 
 describe('VerticalFeed', () => {
-  const mockItems: MediaItem[] = [
-    { type: 'image' as const, src: 'test-image.jpg', id: '1' },
-    { type: 'video' as const, src: 'test-video.mp4', id: '2' },
+  const mockItems: VideoItem[] = [
+    {
+      src: 'test-video-1.mp4',
+      id: '1',
+      controls: true,
+      autoPlay: true,
+      muted: true,
+      playsInline: true,
+    },
+    {
+      src: 'test-video-2.mp4',
+      id: '2',
+      controls: true,
+      autoPlay: true,
+      muted: true,
+      playsInline: true,
+    },
   ];
 
   beforeEach(() => {
     // Mock scrollTo method
     Element.prototype.scrollTo = jest.fn();
+    // Mock video methods
+    HTMLVideoElement.prototype.play = jest.fn().mockResolvedValue(undefined);
+    HTMLVideoElement.prototype.pause = jest.fn();
   });
 
   it('renders without crashing', () => {
@@ -22,6 +48,19 @@ describe('VerticalFeed', () => {
     render(<VerticalFeed items={mockItems} />);
     const items = screen.getAllByRole('region');
     expect(items).toHaveLength(mockItems.length);
+  });
+
+  it('renders videos with correct attributes', () => {
+    const { container } = render(<VerticalFeed items={mockItems} />);
+    const videos = container.querySelectorAll('video');
+
+    videos.forEach((video, index) => {
+      expect(video).toHaveAttribute('src', mockItems[index].src);
+      expect(video.controls).toBe(true);
+      expect(video.autoplay).toBe(true);
+      expect(video.muted).toBe(true);
+      expect(video.playsInline).toBe(true);
+    });
   });
 
   it('calls onItemClick when an item is clicked', () => {
@@ -42,19 +81,17 @@ describe('VerticalFeed', () => {
     expect(loadingElements).toHaveLength(mockItems.length);
   });
 
-  it('renders error component when media fails to load', () => {
+  it('renders error component when video fails to load', () => {
     const errorComponent = <div data-testid="error">Error occurred</div>;
     const { container } = render(
       <VerticalFeed items={mockItems} errorComponent={errorComponent} />
     );
 
-    // Find the first image using querySelector
-    const image = container.querySelector('img') as HTMLImageElement;
-    expect(image).toHaveAttribute('src', 'test-image.jpg');
+    const video = container.querySelector('video') as HTMLVideoElement;
+    expect(video).toHaveAttribute('src', 'test-video-1.mp4');
 
-    // Simulate error
     act(() => {
-      fireEvent.error(image);
+      fireEvent.error(video);
     });
 
     expect(screen.getByTestId('error')).toBeInTheDocument();
@@ -71,18 +108,17 @@ describe('VerticalFeed', () => {
     expect(feed).toHaveStyle(style);
   });
 
-  it('handles media load events correctly', () => {
+  it('handles video load events correctly', () => {
     const { container } = render(<VerticalFeed items={mockItems} />);
 
-    // Find the first image using querySelector
-    const image = container.querySelector('img') as HTMLImageElement;
-    expect(image).toHaveAttribute('src', 'test-image.jpg');
+    const video = container.querySelector('video') as HTMLVideoElement;
+    expect(video).toHaveAttribute('src', 'test-video-1.mp4');
 
     act(() => {
-      fireEvent.load(image);
+      fireEvent.loadedData(video);
     });
 
-    expect(image).toHaveStyle({ display: 'block' });
+    expect(video).toHaveStyle({ display: 'block' });
   });
 
   it('handles keyboard navigation', () => {
@@ -94,5 +130,35 @@ describe('VerticalFeed', () => {
 
     fireEvent.keyDown(feed, { key: 'ArrowUp' });
     expect(Element.prototype.scrollTo).toHaveBeenCalledTimes(2);
+  });
+
+  it('plays video when it becomes visible', async () => {
+    const { container } = render(<VerticalFeed items={mockItems} />);
+    const video = container.querySelector('video') as HTMLVideoElement;
+    const videoContainer = video.parentElement!;
+
+    // Get the callback from the mock
+    const observerCallback = mockIntersectionObserver.mock.calls[0][0];
+
+    await act(async () => {
+      observerCallback([{ isIntersecting: true, target: videoContainer }]);
+    });
+
+    expect(video.play).toHaveBeenCalled();
+  });
+
+  it('pauses video when it becomes hidden', () => {
+    const { container } = render(<VerticalFeed items={mockItems} />);
+    const video = container.querySelector('video') as HTMLVideoElement;
+    const videoContainer = video.parentElement!;
+
+    // Get the callback from the mock
+    const observerCallback = mockIntersectionObserver.mock.calls[0][0];
+
+    act(() => {
+      observerCallback([{ isIntersecting: false, target: videoContainer }]);
+    });
+
+    expect(video.pause).toHaveBeenCalled();
   });
 });

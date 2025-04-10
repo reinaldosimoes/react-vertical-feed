@@ -1,11 +1,10 @@
 # React Vertical Feed
 
-A React component for creating vertical media feeds (videos and images) similar to TikTok or Instagram. This component provides a smooth, performant way to display vertical content with automatic play/pause for videos based on visibility.
+A React component for creating vertical video feeds similar to TikTok or Instagram. This component provides a smooth, performant way to display vertical videos with automatic play/pause based on visibility.
 
 ## Features
 
 - 🎥 Automatic video play/pause based on visibility
-- 🖼️ Support for both videos and images
 - ⌨️ Keyboard navigation support
 - ♿️ Accessibility features
 - 📱 Mobile-friendly
@@ -36,7 +35,6 @@ const App = () => {
   ];
 
   const items = videos.map(video => ({
-    type: 'video',
     src: video,
     controls: true,
     autoPlay: true,
@@ -58,20 +56,24 @@ const App = () => {
 
 ## Props
 
-| Prop               | Type                                         | Default      | Description                             |
-| ------------------ | -------------------------------------------- | ------------ | --------------------------------------- |
-| `items`            | `MediaItem[]`                                | **required** | Array of media items (videos or images) |
-| `onEndReached`     | `() => void`                                 | -            | Callback when user scrolls to the end   |
-| `showControls`     | `boolean`                                    | `false`      | Show video controls                     |
-| `loadingComponent` | `React.ReactNode`                            | -            | Custom loading component                |
-| `errorComponent`   | `React.ReactNode`                            | -            | Custom error component                  |
-| `mediaProps`       | `{ video?: VideoProps; image?: ImageProps }` | `{}`         | Additional media element props          |
+| Prop               | Type                                       | Default      | Description                             |
+| ------------------ | ------------------------------------------ | ------------ | --------------------------------------- |
+| `items`            | `VideoItem[]`                              | **required** | Array of video items                    |
+| `onEndReached`     | `() => void`                               | -            | Callback when user scrolls to the end   |
+| `loadingComponent` | `React.ReactNode`                          | -            | Custom loading component                |
+| `errorComponent`   | `React.ReactNode`                          | -            | Custom error component                  |
+| `className`        | `string`                                   | -            | Additional CSS class                    |
+| `style`            | `React.CSSProperties`                      | -            | Additional CSS styles                   |
+| `onItemVisible`    | `(item: VideoItem, index: number) => void` | -            | Callback when item becomes visible      |
+| `onItemHidden`     | `(item: VideoItem, index: number) => void` | -            | Callback when item becomes hidden       |
+| `onItemClick`      | `(item: VideoItem, index: number) => void` | -            | Callback when item is clicked           |
+| `threshold`        | `number`                                   | `0.75`       | Intersection observer threshold         |
+| `scrollBehavior`   | `ScrollBehavior`                           | `'smooth'`   | Scroll behavior for keyboard navigation |
 
-### MediaItem Types
+### VideoItem Type
 
 ```typescript
-interface MediaItem {
-  type: 'video' | 'image';
+interface VideoItem {
   src: string;
   id?: string;
   metadata?: Record<string, unknown>;
@@ -80,20 +82,6 @@ interface MediaItem {
   muted?: boolean;
   playsInline?: boolean;
 }
-
-interface VideoItem extends MediaItem {
-  type: 'video';
-  controls?: boolean;
-  autoPlay?: boolean;
-  muted?: boolean;
-  playsInline?: boolean;
-}
-
-interface ImageItem extends MediaItem {
-  type: 'image';
-}
-
-type MediaItemType = VideoItem | ImageItem;
 ```
 
 ## Development
