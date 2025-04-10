@@ -1,1 +1,1 @@
-export { VerticalFeed, type MediaItem, type VerticalFeedProps } from './VerticalFeed';
+export { VerticalFeed, type VideoItem, type VerticalFeedProps } from './VerticalFeed';
