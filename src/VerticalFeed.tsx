@@ -5,10 +5,28 @@ export interface MediaItem {
   src: string;
   id?: string;
   metadata?: Record<string, unknown>;
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
 }
 
+export interface VideoItem extends MediaItem {
+  type: 'video';
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
+}
+
+export interface ImageItem extends MediaItem {
+  type: 'image';
+}
+
+export type MediaItemType = VideoItem | ImageItem;
+
 export interface VerticalFeedProps {
-  items: MediaItem[];
+  items: MediaItemType[];
   onEndReached?: () => void;
   showControls?: boolean;
   loadingComponent?: React.ReactNode;
@@ -17,13 +35,13 @@ export interface VerticalFeedProps {
     video?: React.VideoHTMLAttributes<HTMLVideoElement>;
     image?: React.ImgHTMLAttributes<HTMLImageElement>;
   };
-  renderItem?: (item: MediaItem, index: number) => React.ReactNode;
+  renderItem?: (item: MediaItemType, index: number) => React.ReactNode;
   itemHeight?: string | number;
   className?: string;
   style?: React.CSSProperties;
-  onItemVisible?: (item: MediaItem, index: number) => void;
-  onItemHidden?: (item: MediaItem, index: number) => void;
-  onItemClick?: (item: MediaItem, index: number) => void;
+  onItemVisible?: (item: MediaItemType, index: number) => void;
+  onItemHidden?: (item: MediaItemType, index: number) => void;
+  onItemClick?: (item: MediaItemType, index: number) => void;
   threshold?: number;
   scrollBehavior?: ScrollBehavior;
 }
@@ -133,7 +151,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
   );
 
   const defaultRenderItem = useCallback(
-    (item: MediaItem, index: number) => {
+    (item: MediaItemType, index: number) => {
       const isLoading = loadingStates[index] ?? true;
       const hasError = errorStates[index] ?? false;
 

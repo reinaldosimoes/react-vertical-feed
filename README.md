@@ -27,34 +27,31 @@ yarn add react-vertical-feed
 import { VerticalFeed } from 'react-vertical-feed';
 
 const App = () => {
-  const items = [
-    { type: 'video', src: 'https://example.com/video1.mp4' },
-    { type: 'image', src: 'https://example.com/image1.jpg' },
-    { type: 'video', src: 'https://example.com/video2.mp4' },
-    // ... more media items
+  const videos = [
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
   ];
 
+  const items = videos.map(video => ({
+    type: 'video',
+    src: video,
+    controls: true,
+    autoPlay: true,
+    muted: true,
+    playsInline: true,
+  }));
+
   const handleEndReached = () => {
-    // Load more items
+    console.log('End reached');
   };
 
   return (
-    <VerticalFeed
-      items={items}
-      onEndReached={handleEndReached}
-      showControls={true}
-      loadingComponent={<LoadingSpinner />}
-      errorComponent={<ErrorMessage />}
-      mediaProps={{
-        video: {
-          preload: 'auto',
-          loop: true,
-        },
-        image: {
-          loading: 'lazy',
-        },
-      }}
-    />
+    <div className="w-full h-screen">
+      <VerticalFeed items={items} onEndReached={handleEndReached} className="h-full" />
+    </div>
   );
 };
 ```
@@ -70,13 +67,33 @@ const App = () => {
 | `errorComponent`   | `React.ReactNode`                            | -            | Custom error component                  |
 | `mediaProps`       | `{ video?: VideoProps; image?: ImageProps }` | `{}`         | Additional media element props          |
 
-### MediaItem Type
+### MediaItem Types
 
 ```typescript
 interface MediaItem {
   type: 'video' | 'image';
   src: string;
+  id?: string;
+  metadata?: Record<string, unknown>;
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
 }
+
+interface VideoItem extends MediaItem {
+  type: 'video';
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
+}
+
+interface ImageItem extends MediaItem {
+  type: 'image';
+}
+
+type MediaItemType = VideoItem | ImageItem;
 ```
 
 ## Development
