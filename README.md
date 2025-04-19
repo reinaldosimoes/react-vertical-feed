@@ -1,6 +1,6 @@
 # React Vertical Feed
 
-[![npm version](https://badge.fury.io/js/react-vertical-feed.svg)](https://badge.fury.io/js/react-vertical-feed)
+[![npm](https://img.shields.io/badge/npm-react--vertical--feed-red)](https://www.npmjs.com/package/react-vertical-feed)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-vertical-feed)](https://bundlephobia.com/result?p=react-vertical-feed)
 [![CI](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml)
 [![Coverage](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml)
