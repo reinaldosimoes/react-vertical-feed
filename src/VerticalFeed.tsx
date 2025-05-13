@@ -22,9 +22,10 @@ export interface VerticalFeedProps {
   onItemClick?: (item: VideoItem, index: number) => void;
   threshold?: number;
   scrollBehavior?: ScrollBehavior;
+  renderItemOverlay?: (item: VideoItem, index: number) => React.ReactNode;
 }
 
-export const VerticalFeed: React.FC<VerticalFeedProps> = ({
+export const VerticalFeed = ({
   items,
   onEndReached,
   loadingComponent,
@@ -36,7 +37,8 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
   onItemClick,
   threshold = 0.75,
   scrollBehavior = 'smooth',
-}) => {
+  renderItemOverlay,
+}: VerticalFeedProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadingStates, setLoadingStates] = useState<Record<number, boolean>>({});
   const [errorStates, setErrorStates] = useState<Record<number, boolean>>({});
@@ -158,6 +160,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
               display: isLoading || hasError ? 'none' : 'block',
             }}
           />
+          {renderItemOverlay && renderItemOverlay(item, index)}
         </div>
       );
     },
@@ -169,6 +172,7 @@ export const VerticalFeed: React.FC<VerticalFeedProps> = ({
       handleMediaLoad,
       handleMediaError,
       onItemClick,
+      renderItemOverlay,
     ]
   );
 
