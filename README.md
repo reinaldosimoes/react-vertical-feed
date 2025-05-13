@@ -46,31 +46,89 @@ yarn add react-vertical-feed
 
 ```tsx
 import { VerticalFeed } from 'react-vertical-feed';
+import { Heart } from 'lucide-react';
 
 const App = () => {
-  const videos = [
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-  ];
+  const [videoStates, setVideoStates] = useState<Record<number, { liked: boolean }>>({});
 
-  const items = videos.map(video => ({
-    src: video,
-    controls: true,
-    autoPlay: true,
-    muted: true,
-    playsInline: true,
-  }));
+  const videos = [
+    {
+      src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      controls: true,
+      autoPlay: true,
+      muted: true,
+      playsInline: true,
+    },
+    // ... more videos
+  ];
 
   const handleEndReached = () => {
     console.log('End reached');
   };
 
+  const renderVideoOverlay = (item: VideoItem, index: number) => {
+    const { liked = false } = videoStates[index] || {};
+
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          right: '20px',
+          bottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+          zIndex: 10,
+        }}
+      >
+        <div
+          style={{
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderRadius: '12px',
+            padding: '8px',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setVideoStates(prev => ({
+                ...prev,
+                [index]: { liked: !prev[index]?.liked },
+              }));
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <Heart
+              size={32}
+              fill={liked ? '#ff2d55' : 'none'}
+              color={liked ? '#ff2d55' : 'white'}
+            />
+            <span style={{ color: 'white', fontSize: '14px' }}>{liked ? 'Liked' : 'Like'}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full h-screen">
-      <VerticalFeed items={items} onEndReached={handleEndReached} className="h-full" />
+      <VerticalFeed
+        items={videos}
+        onEndReached={handleEndReached}
+        className="h-full"
+        renderItemOverlay={renderVideoOverlay}
+      />
     </div>
   );
 };
@@ -80,19 +138,20 @@ const App = () => {
 
 ### Props
 
-| Prop               | Type                                       | Default      | Description                             |
-| ------------------ | ------------------------------------------ | ------------ | --------------------------------------- |
-| `items`            | `VideoItem[]`                              | **required** | Array of video items                    |
-| `onEndReached`     | `() => void`                               | -            | Callback when user scrolls to the end   |
-| `loadingComponent` | `React.ReactNode`                          | -            | Custom loading component                |
-| `errorComponent`   | `React.ReactNode`                          | -            | Custom error component                  |
-| `className`        | `string`                                   | -            | Additional CSS class                    |
-| `style`            | `React.CSSProperties`                      | -            | Additional CSS styles                   |
-| `onItemVisible`    | `(item: VideoItem, index: number) => void` | -            | Callback when item becomes visible      |
-| `onItemHidden`     | `(item: VideoItem, index: number) => void` | -            | Callback when item becomes hidden       |
-| `onItemClick`      | `(item: VideoItem, index: number) => void` | -            | Callback when item is clicked           |
-| `threshold`        | `number`                                   | `0.75`       | Intersection observer threshold         |
-| `scrollBehavior`   | `ScrollBehavior`                           | `'smooth'`   | Scroll behavior for keyboard navigation |
+| Prop                | Type                                                  | Default      | Description                             |
+| ------------------- | ----------------------------------------------------- | ------------ | --------------------------------------- |
+| `items`             | `VideoItem[]`                                         | **required** | Array of video items                    |
+| `onEndReached`      | `() => void`                                          | -            | Callback when user scrolls to the end   |
+| `loadingComponent`  | `React.ReactNode`                                     | -            | Custom loading component                |
+| `errorComponent`    | `React.ReactNode`                                     | -            | Custom error component                  |
+| `className`         | `string`                                              | -            | Additional CSS class                    |
+| `style`             | `React.CSSProperties`                                 | -            | Additional CSS styles                   |
+| `onItemVisible`     | `(item: VideoItem, index: number) => void`            | -            | Callback when item becomes visible      |
+| `onItemHidden`      | `(item: VideoItem, index: number) => void`            | -            | Callback when item becomes hidden       |
+| `onItemClick`       | `(item: VideoItem, index: number) => void`            | -            | Callback when item is clicked           |
+| `threshold`         | `number`                                              | `0.75`       | Intersection observer threshold         |
+| `scrollBehavior`    | `ScrollBehavior`                                      | `'smooth'`   | Scroll behavior for keyboard navigation |
+| `renderItemOverlay` | `(item: VideoItem, index: number) => React.ReactNode` | -            | Custom overlay component for each item  |
 
 ### Types
 
