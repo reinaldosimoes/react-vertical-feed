@@ -82,10 +82,8 @@ const App = (): React.ReactElement => {
       >
         <div
           style={{
-            background: 'rgba(0, 0, 0, 0.5)',
             borderRadius: '12px',
             padding: '8px',
-            backdropFilter: 'blur(4px)',
           }}
         >
           <button
@@ -102,7 +100,7 @@ const App = (): React.ReactElement => {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '4px',
-              transform: animating ? 'scale(1.3)' : 'scale(1)',
+              transform: animating ? 'scale(1.1)' : 'scale(1)',
               transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             }}
           >
@@ -110,8 +108,17 @@ const App = (): React.ReactElement => {
               size={32}
               fill={liked ? '#ff2d55' : 'none'}
               color={liked ? '#ff2d55' : 'white'}
+              style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9)' }}
             />
-            <span style={{ color: 'white', fontSize: '14px' }}>{liked ? 'Liked' : 'Like'}</span>
+            <span
+              style={{
+                color: 'white',
+                fontSize: '14px',
+                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9))',
+              }}
+            >
+              {liked ? 'Liked' : 'Like'}
+            </span>
           </button>
         </div>
       </div>
