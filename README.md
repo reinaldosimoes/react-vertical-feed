@@ -17,6 +17,8 @@ A React component for creating vertical video feeds similar to TikTok or Instagr
   - [API Reference](#api-reference)
     - [Props](#props)
     - [Types](#types)
+    - [Keyboard Navigation](#keyboard-navigation)
+    - [Programmatic Control](#programmatic-control)
   - [Browser Compatibility](#browser-compatibility)
   - [Performance](#performance)
   - [Development](#development)
@@ -26,11 +28,12 @@ A React component for creating vertical video feeds similar to TikTok or Instagr
 ## Features
 
 - 🎥 Automatic video play/pause based on visibility
-- ⌨️ Keyboard navigation support
+- ⌨️ Keyboard navigation support (Arrow keys, Space, Home, End)
 - ♿️ Accessibility features
 - 📱 Mobile-friendly
 - 🎨 Customizable loading and error states
-- ⚡️ Performance optimized
+- 🔄 Video loop and poster image support
+- ⚡️ Performance optimized with stable refs
 - 📦 TypeScript support
 - 🌐 [Live Demo](https://reinaldosimoes.github.io/react-vertical-feed/)
 
@@ -138,20 +141,24 @@ const App = () => {
 
 ### Props
 
-| Prop                | Type                                                  | Default      | Description                             |
-| ------------------- | ----------------------------------------------------- | ------------ | --------------------------------------- |
-| `items`             | `VideoItem[]`                                         | **required** | Array of video items                    |
-| `onEndReached`      | `() => void`                                          | -            | Callback when user scrolls to the end   |
-| `loadingComponent`  | `React.ReactNode`                                     | -            | Custom loading component                |
-| `errorComponent`    | `React.ReactNode`                                     | -            | Custom error component                  |
-| `className`         | `string`                                              | -            | Additional CSS class                    |
-| `style`             | `React.CSSProperties`                                 | -            | Additional CSS styles                   |
-| `onItemVisible`     | `(item: VideoItem, index: number) => void`            | -            | Callback when item becomes visible      |
-| `onItemHidden`      | `(item: VideoItem, index: number) => void`            | -            | Callback when item becomes hidden       |
-| `onItemClick`       | `(item: VideoItem, index: number) => void`            | -            | Callback when item is clicked           |
-| `threshold`         | `number`                                              | `0.75`       | Intersection observer threshold         |
-| `scrollBehavior`    | `ScrollBehavior`                                      | `'smooth'`   | Scroll behavior for keyboard navigation |
-| `renderItemOverlay` | `(item: VideoItem, index: number) => React.ReactNode` | -            | Custom overlay component for each item  |
+| Prop                  | Type                                                       | Default      | Description                                   |
+| --------------------- | ---------------------------------------------------------- | ------------ | --------------------------------------------- |
+| `items`               | `VideoItem[]`                                              | **required** | Array of video items                          |
+| `onEndReached`        | `() => void`                                               | -            | Callback when user scrolls to the end         |
+| `loadingComponent`    | `React.ReactNode`                                          | -            | Custom loading component                      |
+| `errorComponent`      | `React.ReactNode`                                          | -            | Custom error component                        |
+| `className`           | `string`                                                   | -            | Additional CSS class                          |
+| `style`               | `React.CSSProperties`                                      | -            | Additional CSS styles                         |
+| `onItemVisible`       | `(item: VideoItem, index: number) => void`                 | -            | Callback when item becomes visible            |
+| `onItemHidden`        | `(item: VideoItem, index: number) => void`                 | -            | Callback when item becomes hidden             |
+| `onItemClick`         | `(item: VideoItem, index: number) => void`                 | -            | Callback when item is clicked                 |
+| `threshold`           | `number`                                                   | `0.75`       | Intersection observer threshold               |
+| `scrollBehavior`      | `ScrollBehavior`                                           | `'smooth'`   | Scroll behavior for keyboard navigation       |
+| `renderItemOverlay`   | `(item: VideoItem, index: number) => React.ReactNode`      | -            | Custom overlay component for each item        |
+| `endReachedThreshold` | `number`                                                   | `100`        | Distance from bottom to trigger onEndReached  |
+| `onVideoError`        | `(item: VideoItem, index: number, error: Error) => void`   | -            | Callback when video playback fails            |
+| `onCurrentItemChange` | `(index: number) => void`                                  | -            | Callback when current visible item changes    |
+| `defaultPreload`      | `'none' \| 'metadata' \| 'auto'`                           | `'metadata'` | Default preload strategy for videos           |
 
 ### Types
 
@@ -164,7 +171,56 @@ interface VideoItem {
   autoPlay?: boolean;
   muted?: boolean;
   playsInline?: boolean;
+  loop?: boolean;
+  poster?: string;
+  preload?: 'none' | 'metadata' | 'auto';
 }
+
+interface VerticalFeedRef {
+  scrollToItem: (index: number, behavior?: ScrollBehavior) => void;
+  getCurrentItem: () => number;
+}
+```
+
+### Keyboard Navigation
+
+| Key        | Action                              |
+| ---------- | ----------------------------------- |
+| `↑`        | Scroll to previous video            |
+| `↓`        | Scroll to next video                |
+| `Space`    | Play/pause current video            |
+| `Home`     | Scroll to first video               |
+| `End`      | Scroll to last video                |
+
+### Programmatic Control
+
+You can control the feed programmatically using a ref:
+
+```tsx
+import { useRef } from 'react';
+import { VerticalFeed, VerticalFeedRef } from 'react-vertical-feed';
+
+const App = () => {
+  const feedRef = useRef<VerticalFeedRef>(null);
+
+  const handleNext = () => {
+    const current = feedRef.current?.getCurrentItem() ?? 0;
+    feedRef.current?.scrollToItem(current + 1);
+  };
+
+  const handlePrev = () => {
+    const current = feedRef.current?.getCurrentItem() ?? 0;
+    feedRef.current?.scrollToItem(current - 1);
+  };
+
+  return (
+    <>
+      <VerticalFeed ref={feedRef} items={videos} />
+      <button onClick={handlePrev}>Previous</button>
+      <button onClick={handleNext}>Next</button>
+    </>
+  );
+};
 ```
 
 ## Browser Compatibility

@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.21](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.20...v0.1.21) (2025-01-18)
+
+### Features
+
+* **VideoItem**: add `loop`, `poster`, and `preload` properties for enhanced video control
+* **VerticalFeedProps**: add `endReachedThreshold` prop to configure scroll-end detection distance (default: 100px)
+* **VerticalFeedProps**: add `onVideoError` callback for handling video playback failures
+* **VerticalFeedProps**: add `onCurrentItemChange` callback to track current visible item
+* **VerticalFeedProps**: add `defaultPreload` prop for configuring default video preload strategy
+* **keyboard**: add Space bar support to play/pause current video
+* **keyboard**: add Home/End key support to scroll to beginning/end of feed
+* **demo**: enhance video feed demo app with new components and improved functionality
+
+### Improvements
+
+* Use stable refs for callbacks to prevent IntersectionObserver recreation on re-renders
+* Reset endReached flag when user scrolls away from the end to allow re-triggering
+
+### [0.1.19](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.18...v0.1.19) (2025-05-15)
+
+### Chores
+
+* Dependency updates
+
 ### [0.1.18](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.17...v0.1.18) (2025-05-14)
 
 ### [0.1.16](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.15...v0.1.16) (2025-04-19)
