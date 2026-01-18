@@ -15,8 +15,6 @@ import {
   Music,
   ListMusic,
   ChevronRight,
-  Wifi,
-  Signal,
   Github,
 } from 'lucide-react';
 
@@ -34,7 +32,8 @@ const VIDEO_METADATA = [
   },
   {
     username: 'techbro404',
-    caption: 'Me explaining to my PM why the feature needs 2 more sprints 😅 #agile #scrum #techhumor',
+    caption:
+      'Me explaining to my PM why the feature needs 2 more sprints 😅 #agile #scrum #techhumor',
     audioText: 'Elevator Music - Corporate Mix',
     playlistText: 'Sprint Fails · 50K+',
     likeCount: '156.2K',
@@ -53,22 +52,6 @@ const VIDEO_METADATA = [
     shareCount: '1.5K',
   },
 ];
-
-// Status Bar Component
-const StatusBar: React.FC = () => (
-  <div className="status-bar">
-    <span className="status-bar-time">10:16</span>
-    <div className="status-bar-icons">
-      <Signal size={16} />
-      <Wifi size={16} />
-      <div className="battery-indicator">
-        <div className="battery-icon">
-          <div className="battery-level" style={{ width: '52%' }} />
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 // Top Navigation Component
 interface TopNavigationProps {
@@ -316,7 +299,6 @@ const App = (): React.ReactElement => {
     },
   ];
 
-
   const toggleLike = useCallback((index: number) => {
     setVideoStates(prev => ({
       ...prev,
@@ -392,7 +374,6 @@ const App = (): React.ReactElement => {
 
   return (
     <div style={{ height: '100vh', width: '100vw', backgroundColor: '#000', position: 'relative' }}>
-      <StatusBar />
       <TopNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <VerticalFeed

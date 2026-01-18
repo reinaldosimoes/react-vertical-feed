@@ -19,76 +19,10 @@ body {
   overflow: hidden;
 }
 
-/* Status Bar */
-.status-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 44px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  z-index: 100;
-  background-color: #000000;
-}
-
-.status-bar-time {
-  background-color: #FF0050;
-  color: #FFFFFF;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.status-bar-icons {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.battery-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.battery-icon {
-  width: 24px;
-  height: 12px;
-  border: 1px solid #FFFFFF;
-  border-radius: 3px;
-  position: relative;
-  padding: 1px;
-}
-
-.battery-icon::after {
-  content: '';
-  position: absolute;
-  right: -4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
-  height: 6px;
-  background: #FFFFFF;
-  border-radius: 0 1px 1px 0;
-}
-
-.battery-level {
-  height: 100%;
-  background: #FFFFFF;
-  border-radius: 1px;
-}
-
 /* Top Navigation */
 .top-navigation {
   position: fixed;
-  top: 44px;
+  top: 0;
   left: 0;
   right: 0;
   height: 60px;
@@ -101,8 +35,8 @@ body {
 }
 
 .live-badge {
-  background-color: #FF0050;
-  color: #FFFFFF;
+  background-color: #ff0050;
+  color: #ffffff;
   font-weight: bold;
   font-size: 11px;
   padding: 4px 8px;
@@ -138,7 +72,7 @@ body {
 }
 
 .nav-tab.active {
-  color: #FFFFFF;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -149,7 +83,7 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border-radius: 1px;
 }
 
@@ -160,7 +94,7 @@ body {
 }
 
 .nav-icon {
-  color: #FFFFFF;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -171,7 +105,7 @@ body {
 .right-sidebar {
   position: fixed;
   right: 12px;
-  bottom: 160px;
+  top: 20vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -194,12 +128,12 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid #FFFFFF;
+  border: 2px solid #ffffff;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: #ffffff;
   font-weight: bold;
   font-size: 18px;
 }
@@ -211,7 +145,7 @@ body {
   transform: translateX(-50%);
   width: 20px;
   height: 20px;
-  background-color: #FF0050;
+  background-color: #ff0050;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -223,7 +157,7 @@ body {
 .follow-button svg {
   width: 12px;
   height: 12px;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .action-button {
@@ -247,7 +181,7 @@ body {
 }
 
 .action-count {
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 500;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -262,9 +196,15 @@ body {
 }
 
 @keyframes heartBurst {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .music-disc {
@@ -281,8 +221,12 @@ body {
 }
 
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .music-disc-inner {
@@ -318,7 +262,7 @@ body {
 }
 
 .username {
-  color: #FFFFFF;
+  color: #ffffff;
   font-weight: bold;
   font-size: 16px;
   margin-bottom: 8px;
@@ -326,7 +270,7 @@ body {
 }
 
 .caption {
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 14px;
   line-height: 1.4;
   margin-bottom: 8px;
@@ -341,7 +285,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 13px;
   margin-bottom: 12px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -358,8 +302,12 @@ body {
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .playlist-banner {
@@ -369,7 +317,7 @@ body {
   background: rgba(0, 0, 0, 0.5);
   padding: 8px 12px;
   border-radius: 8px;
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 13px;
   cursor: pointer;
 }
@@ -418,7 +366,7 @@ body {
 
 .nav-item.active .nav-item-icon,
 .nav-item.active .nav-item-label {
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .nav-item:not(.active) .nav-item-icon,
@@ -430,8 +378,8 @@ body {
   position: absolute;
   top: -4px;
   right: -8px;
-  background-color: #FF0050;
-  color: #FFFFFF;
+  background-color: #ff0050;
+  color: #ffffff;
   font-size: 10px;
   font-weight: bold;
   min-width: 16px;
@@ -446,7 +394,7 @@ body {
 .create-button {
   width: 44px;
   height: 28px;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -463,7 +411,7 @@ body {
   top: 0;
   bottom: 0;
   width: 50%;
-  background: linear-gradient(to right, #00F2EA, #00F2EA);
+  background: linear-gradient(to right, #00f2ea, #00f2ea);
   border-radius: 8px 0 0 8px;
 }
 
@@ -474,14 +422,14 @@ body {
   top: 0;
   bottom: 0;
   width: 50%;
-  background: linear-gradient(to left, #FF0050, #FF0050);
+  background: linear-gradient(to left, #ff0050, #ff0050);
   border-radius: 0 8px 8px 0;
 }
 
 .create-button-inner {
   position: relative;
   z-index: 1;
-  background: #FFFFFF;
+  background: #ffffff;
   width: 36px;
   height: 24px;
   border-radius: 6px;
@@ -513,16 +461,20 @@ body {
 }
 
 .loading-dot:nth-child(1) {
-  background-color: #FF0050;
+  background-color: #ff0050;
   animation-delay: 0s;
 }
 
 .loading-dot:nth-child(2) {
-  background-color: #00F2EA;
+  background-color: #00f2ea;
   animation-delay: 0.2s;
 }
 
 @keyframes bounce {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-10px); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
 }
