@@ -129,7 +129,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   <div className="right-sidebar">
     {/* Profile Button */}
     <div className="sidebar-item profile-button">
-      <div className="profile-avatar">S</div>
+      <div className="profile-avatar">RS</div>
       <button className="follow-button">
         <Plus size={12} strokeWidth={3} color="#FFFFFF" />
       </button>
@@ -188,15 +188,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         <Github size={32} color="#FFFFFF" strokeWidth={2} />
         <span className="action-count">GitHub</span>
       </a>
-    </div>
-
-    {/* Music Disc */}
-    <div className="sidebar-item">
-      <div className="music-disc">
-        <div className="music-disc-inner">
-          <Music size={10} color="#FFFFFF" />
-        </div>
-      </div>
     </div>
   </div>
 );
