@@ -526,16 +526,3 @@ body {
   0% { transform: translateY(0); }
   100% { transform: translateY(-10px); }
 }
-
-/* Home indicator line */
-.home-indicator {
-  position: fixed;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 134px;
-  height: 5px;
-  background-color: #FFFFFF;
-  border-radius: 3px;
-  z-index: 101;
-}

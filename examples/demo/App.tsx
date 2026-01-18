@@ -267,7 +267,6 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeItem, onItemC
           </div>
         );
       })}
-      <div className="home-indicator" />
     </div>
   );
 };
