@@ -1,140 +1,423 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { VerticalFeed, type VideoItem } from '../../src/VerticalFeed';
-import { Heart } from 'lucide-react';
+import {
+  Heart,
+  MessageCircle,
+  Bookmark,
+  Share,
+  Plus,
+  Search,
+  PlayCircle,
+  Home,
+  Users,
+  Inbox,
+  User,
+  Music,
+  ListMusic,
+  ChevronRight,
+  Wifi,
+  Signal,
+  Github,
+} from 'lucide-react';
 
+// Video metadata for each video in the feed
+const VIDEO_METADATA = [
+  {
+    username: 'codingmemes',
+    caption: "When the code works but you don't know why 🤷‍♂️ #programming #devlife #javascript",
+    audioText: 'original sound - debugger.mp3',
+    playlistText: 'Dev Humor · 100K+ 💻🔥',
+    likeCount: '243.6K',
+    commentCount: '990',
+    bookmarkCount: '20.8K',
+    shareCount: '773',
+  },
+  {
+    username: 'techbro404',
+    caption: 'Me explaining to my PM why the feature needs 2 more sprints 😅 #agile #scrum #techhumor',
+    audioText: 'Elevator Music - Corporate Mix',
+    playlistText: 'Sprint Fails · 50K+',
+    likeCount: '156.2K',
+    commentCount: '1.2K',
+    bookmarkCount: '15.3K',
+    shareCount: '892',
+  },
+  {
+    username: 'stackoverflow_hero',
+    caption: 'Copy paste from Stack Overflow and pray 🙏 #coding #developer #softwaredeveloper',
+    audioText: 'Keyboard Typing ASMR',
+    playlistText: 'Code Moments · 75K+',
+    likeCount: '312.4K',
+    commentCount: '2.1K',
+    bookmarkCount: '28.9K',
+    shareCount: '1.5K',
+  },
+];
+
+// Status Bar Component
+const StatusBar: React.FC = () => (
+  <div className="status-bar">
+    <span className="status-bar-time">10:16</span>
+    <div className="status-bar-icons">
+      <Signal size={16} />
+      <Wifi size={16} />
+      <div className="battery-indicator">
+        <div className="battery-icon">
+          <div className="battery-level" style={{ width: '52%' }} />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Top Navigation Component
+interface TopNavigationProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+const TopNavigation: React.FC<TopNavigationProps> = ({ activeTab, onTabChange }) => {
+  const tabs = ['Gaming', 'Food', 'Sports', 'Fashion'];
+
+  return (
+    <div className="top-navigation">
+      <div className="top-nav-center">
+        {tabs.map(tab => (
+          <span
+            key={tab}
+            className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => onTabChange(tab)}
+          >
+            {tab}
+          </span>
+        ))}
+      </div>
+      <div className="top-nav-right">
+        <div className="nav-icon">
+          <PlayCircle size={24} />
+        </div>
+        <div className="nav-icon">
+          <Search size={24} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Right Sidebar Component
+interface RightSidebarProps {
+  liked: boolean;
+  bookmarked: boolean;
+  onLike: () => void;
+  onBookmark: () => void;
+  likeCount: string;
+  commentCount: string;
+  bookmarkCount: string;
+  shareCount: string;
+}
+
+const RightSidebar: React.FC<RightSidebarProps> = ({
+  liked,
+  bookmarked,
+  onLike,
+  onBookmark,
+  likeCount,
+  commentCount,
+  bookmarkCount,
+  shareCount,
+}) => (
+  <div className="right-sidebar">
+    {/* Profile Button */}
+    <div className="sidebar-item profile-button">
+      <div className="profile-avatar">S</div>
+      <button className="follow-button">
+        <Plus size={12} strokeWidth={3} color="#FFFFFF" />
+      </button>
+    </div>
+
+    {/* Like Button */}
+    <div className="sidebar-item">
+      <button className={`action-button ${liked ? 'liked' : ''}`} onClick={onLike}>
+        <Heart
+          size={32}
+          fill={liked ? '#FF0050' : 'none'}
+          color={liked ? '#FF0050' : '#FFFFFF'}
+          strokeWidth={2}
+        />
+        <span className="action-count">{likeCount}</span>
+      </button>
+    </div>
+
+    {/* Comment Button */}
+    <div className="sidebar-item">
+      <button className="action-button">
+        <MessageCircle size={32} color="#FFFFFF" strokeWidth={2} />
+        <span className="action-count">{commentCount}</span>
+      </button>
+    </div>
+
+    {/* Bookmark Button */}
+    <div className="sidebar-item">
+      <button className={`action-button ${bookmarked ? 'bookmarked' : ''}`} onClick={onBookmark}>
+        <Bookmark
+          size={32}
+          fill={bookmarked ? '#FFD700' : 'none'}
+          color={bookmarked ? '#FFD700' : '#FFFFFF'}
+          strokeWidth={2}
+        />
+        <span className="action-count">{bookmarkCount}</span>
+      </button>
+    </div>
+
+    {/* Share Button */}
+    <div className="sidebar-item">
+      <button className="action-button">
+        <Share size={32} color="#FFFFFF" strokeWidth={2} />
+        <span className="action-count">{shareCount}</span>
+      </button>
+    </div>
+
+    {/* GitHub Button */}
+    <div className="sidebar-item">
+      <a
+        href="https://github.com/reinaldosimoes/react-vertical-feed"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="action-button github-button"
+      >
+        <Github size={32} color="#FFFFFF" strokeWidth={2} />
+        <span className="action-count">GitHub</span>
+      </a>
+    </div>
+
+    {/* Music Disc */}
+    <div className="sidebar-item">
+      <div className="music-disc">
+        <div className="music-disc-inner">
+          <Music size={10} color="#FFFFFF" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Bottom Overlay Component
+interface BottomOverlayProps {
+  username: string;
+  caption: string;
+  audioText: string;
+  playlistText: string;
+}
+
+const BottomOverlay: React.FC<BottomOverlayProps> = ({
+  username,
+  caption,
+  audioText,
+  playlistText,
+}) => (
+  <div className="bottom-overlay">
+    <div className="username">@{username}</div>
+    <div className="caption">{caption}</div>
+    <div className="audio-info">
+      <Music size={14} />
+      <span className="audio-text">
+        <span className="audio-marquee">{audioText}</span>
+      </span>
+    </div>
+    <div className="playlist-banner">
+      <ListMusic size={16} />
+      <span>{playlistText}</span>
+      <ChevronRight size={16} />
+    </div>
+  </div>
+);
+
+// Bottom Navigation Component
+interface BottomNavigationProps {
+  activeItem: string;
+  onItemClick: (item: string) => void;
+}
+
+const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeItem, onItemClick }) => {
+  const navItems = [
+    { id: 'home', icon: Home, label: 'Home' },
+    { id: 'friends', icon: Users, label: 'Friends', badge: 4 },
+    { id: 'create', icon: Plus, label: '', special: true },
+    { id: 'inbox', icon: Inbox, label: 'Inbox', badge: 1 },
+    { id: 'profile', icon: User, label: 'Profile' },
+  ];
+
+  return (
+    <div className="bottom-navigation">
+      {navItems.map(item => {
+        const Icon = item.icon;
+        if (item.special) {
+          return (
+            <div key={item.id} className="nav-item" onClick={() => onItemClick(item.id)}>
+              <div className="create-button">
+                <div className="create-button-inner">
+                  <Plus size={20} strokeWidth={3} />
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div
+            key={item.id}
+            className={`nav-item ${activeItem === item.id ? 'active' : ''}`}
+            onClick={() => onItemClick(item.id)}
+          >
+            <div className="nav-item-icon">
+              <Icon size={24} fill={activeItem === item.id ? '#FFFFFF' : 'none'} />
+              {item.badge && <span className="notification-badge">{item.badge}</span>}
+            </div>
+            <span className="nav-item-label">{item.label}</span>
+          </div>
+        );
+      })}
+      <div className="home-indicator" />
+    </div>
+  );
+};
+
+// Loading Indicator Component
+const LoadingIndicator: React.FC = () => (
+  <div className="loading-dots">
+    <div className="loading-dot" />
+    <div className="loading-dot" />
+  </div>
+);
+
+// Main App Component
 const App = (): React.ReactElement => {
+  const [activeTab, setActiveTab] = useState('Sports');
+  const [activeNavItem, setActiveNavItem] = useState('home');
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoStates, setVideoStates] = useState<
-    Record<number, { liked: boolean; animating: boolean }>
+    Record<number, { liked: boolean; bookmarked: boolean }>
   >({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const videos: VideoItem[] = [
     {
       src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-      controls: true,
+      controls: false,
       autoPlay: true,
       muted: true,
       playsInline: true,
+      loop: true,
     },
     {
       src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      controls: true,
+      controls: false,
       autoPlay: true,
       muted: true,
       playsInline: true,
+      loop: true,
     },
     {
       src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      controls: true,
+      controls: false,
       autoPlay: true,
       muted: true,
       playsInline: true,
+      loop: true,
     },
   ];
 
-  const handleEndReached = () => {
-    console.log('End of feed reached');
-  };
 
-  const handleItemVisible = (item: VideoItem, index: number) => {
-    console.log(`Item ${index} is now visible`);
-  };
-
-  const handleItemHidden = (item: VideoItem, index: number) => {
-    console.log(`Item ${index} is now hidden`);
-  };
-
-  const toggleLike = (index: number) => {
+  const toggleLike = useCallback((index: number) => {
     setVideoStates(prev => ({
       ...prev,
       [index]: {
+        ...prev[index],
         liked: !prev[index]?.liked,
-        animating: true,
       },
     }));
+  }, []);
 
-    // Remove animation after it completes
-    setTimeout(() => {
-      setVideoStates(prev => ({
-        ...prev,
-        [index]: {
-          ...prev[index],
-          animating: false,
-        },
-      }));
-    }, 300);
-  };
+  const toggleBookmark = useCallback((index: number) => {
+    setVideoStates(prev => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        bookmarked: !prev[index]?.bookmarked,
+      },
+    }));
+  }, []);
 
-  const renderVideoOverlay = (item: VideoItem, index: number): React.ReactNode => {
-    const { liked = false, animating = false } = videoStates[index] || {};
+  const handleEndReached = useCallback(() => {
+    console.log('End of feed reached');
+    setIsLoading(true);
+    // Simulate loading more content
+    setTimeout(() => setIsLoading(false), 2000);
+  }, []);
 
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          right: '20px',
-          bottom: '100px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            borderRadius: '12px',
-            padding: '8px',
-          }}
-        >
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              toggleLike(index);
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-              transform: animating ? 'scale(1.1)' : 'scale(1)',
-              transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            }}
-          >
-            <Heart
-              size={32}
-              fill={liked ? '#ff2d55' : 'none'}
-              color={liked ? '#ff2d55' : 'white'}
-              style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9)' }}
-            />
-            <span
-              style={{
-                color: 'white',
-                fontSize: '14px',
-                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9))',
-              }}
-            >
-              {liked ? 'Liked' : 'Like'}
-            </span>
-          </button>
-        </div>
-      </div>
-    );
-  };
+  const handleItemVisible = useCallback((item: VideoItem, index: number) => {
+    console.log(`Video ${index} is now visible`);
+  }, []);
+
+  const handleItemHidden = useCallback((item: VideoItem, index: number) => {
+    console.log(`Video ${index} is now hidden`);
+  }, []);
+
+  const handleCurrentItemChange = useCallback((index: number) => {
+    setCurrentVideoIndex(index);
+  }, []);
+
+  const renderVideoOverlay = useCallback(
+    (item: VideoItem, index: number): React.ReactNode => {
+      // Only render overlay for the currently visible video
+      if (index !== currentVideoIndex) {
+        return null;
+      }
+
+      const { liked = false, bookmarked = false } = videoStates[index] || {};
+      const metadata = VIDEO_METADATA[index] || VIDEO_METADATA[0];
+
+      return (
+        <>
+          <RightSidebar
+            liked={liked}
+            bookmarked={bookmarked}
+            onLike={() => toggleLike(index)}
+            onBookmark={() => toggleBookmark(index)}
+            likeCount={metadata.likeCount}
+            commentCount={metadata.commentCount}
+            bookmarkCount={metadata.bookmarkCount}
+            shareCount={metadata.shareCount}
+          />
+          <BottomOverlay
+            username={metadata.username}
+            caption={metadata.caption}
+            audioText={metadata.audioText}
+            playlistText={metadata.playlistText}
+          />
+        </>
+      );
+    },
+    [videoStates, toggleLike, toggleBookmark, currentVideoIndex]
+  );
 
   return (
-    <div style={{ height: '100vh', width: '100vw', backgroundColor: '#000' }}>
+    <div style={{ height: '100vh', width: '100vw', backgroundColor: '#000', position: 'relative' }}>
+      <StatusBar />
+      <TopNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
       <VerticalFeed
         items={videos}
         onEndReached={handleEndReached}
         onItemVisible={handleItemVisible}
         onItemHidden={handleItemHidden}
+        onCurrentItemChange={handleCurrentItemChange}
         style={{ height: '100%' }}
         renderItemOverlay={renderVideoOverlay}
       />
+
+      {isLoading && <LoadingIndicator />}
+
+      <BottomNavigation activeItem={activeNavItem} onItemClick={setActiveNavItem} />
     </div>
   );
 };
