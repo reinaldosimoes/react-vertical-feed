@@ -216,7 +216,6 @@ body {
   bottom: 80px;
   padding: 16px;
   z-index: 50;
-  width: fit-content;
 }
 
 .bottom-overlay::before {

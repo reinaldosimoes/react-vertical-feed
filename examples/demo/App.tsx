@@ -22,10 +22,9 @@ import {
 const VIDEO_METADATA = [
   {
     username: 'reinaldosimoes',
-    caption:
-      "Training my first neural network vs debugging why it won't converge 🤖💀 #machinelearning #AI #deeplearning",
+    caption: 'This is a demo using the react-vertical-feed npm package.',
     audioText: 'Neural Network Dreams - AI Lofi',
-    playlistText: 'ML Fails · 180K+ 🧠🔥',
+    playlistText: 'NPM Packages · 100K+ ✨',
     likeCount: '328.4K',
     commentCount: '1.5K',
     bookmarkCount: '42.1K',
@@ -33,10 +32,9 @@ const VIDEO_METADATA = [
   },
   {
     username: 'reinaldosimoes',
-    caption:
-      'Me: "I built an AI model!" Friend: "What does it do?" Me: "...classifies cats" 😅 #AIdev #MLhumor #pytorch',
+    caption: 'You can tap on the Github button to check out the repository.',
     audioText: 'GPU Fans Go Brrr - Tech Remix',
-    playlistText: 'AI Memes · 95K+ 🤖✨',
+    playlistText: 'AI Memes · 95K+ 🤖',
     likeCount: '267.8K',
     commentCount: '2.3K',
     bookmarkCount: '31.2K',
@@ -44,8 +42,7 @@ const VIDEO_METADATA = [
   },
   {
     username: 'reinaldosimoes',
-    caption:
-      'Spending 6 hours fine-tuning hyperparameters to improve accuracy by 0.3% 🎯 #LLM #transformers #AIresearch',
+    caption: 'Contributions are welcome!',
     audioText: 'Gradient Descent Vibes',
     playlistText: 'AI Engineering · 120K+ 🚀',
     likeCount: '412.9K',
