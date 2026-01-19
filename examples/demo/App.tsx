@@ -21,35 +21,37 @@ import {
 // Video metadata for each video in the feed
 const VIDEO_METADATA = [
   {
-    username: 'codingmemes',
-    caption: "When the code works but you don't know why 🤷‍♂️ #programming #devlife #javascript",
-    audioText: 'original sound - debugger.mp3',
-    playlistText: 'Dev Humor · 100K+ 💻🔥',
-    likeCount: '243.6K',
-    commentCount: '990',
-    bookmarkCount: '20.8K',
-    shareCount: '773',
-  },
-  {
-    username: 'techbro404',
+    username: 'reinaldosimoes',
     caption:
-      'Me explaining to my PM why the feature needs 2 more sprints 😅 #agile #scrum #techhumor',
-    audioText: 'Elevator Music - Corporate Mix',
-    playlistText: 'Sprint Fails · 50K+',
-    likeCount: '156.2K',
-    commentCount: '1.2K',
-    bookmarkCount: '15.3K',
-    shareCount: '892',
+      "Training my first neural network vs debugging why it won't converge 🤖💀 #machinelearning #AI #deeplearning",
+    audioText: 'Neural Network Dreams - AI Lofi',
+    playlistText: 'ML Fails · 180K+ 🧠🔥',
+    likeCount: '328.4K',
+    commentCount: '1.5K',
+    bookmarkCount: '42.1K',
+    shareCount: '2.1K',
   },
   {
-    username: 'stackoverflow_hero',
-    caption: 'Copy paste from Stack Overflow and pray 🙏 #coding #developer #softwaredeveloper',
-    audioText: 'Keyboard Typing ASMR',
-    playlistText: 'Code Moments · 75K+',
-    likeCount: '312.4K',
-    commentCount: '2.1K',
-    bookmarkCount: '28.9K',
-    shareCount: '1.5K',
+    username: 'reinaldosimoes',
+    caption:
+      'Me: "I built an AI model!" Friend: "What does it do?" Me: "...classifies cats" 😅 #AIdev #MLhumor #pytorch',
+    audioText: 'GPU Fans Go Brrr - Tech Remix',
+    playlistText: 'AI Memes · 95K+ 🤖✨',
+    likeCount: '267.8K',
+    commentCount: '2.3K',
+    bookmarkCount: '31.2K',
+    shareCount: '1.8K',
+  },
+  {
+    username: 'reinaldosimoes',
+    caption:
+      'Spending 6 hours fine-tuning hyperparameters to improve accuracy by 0.3% 🎯 #LLM #transformers #AIresearch',
+    audioText: 'Gradient Descent Vibes',
+    playlistText: 'AI Engineering · 120K+ 🚀',
+    likeCount: '412.9K',
+    commentCount: '3.1K',
+    bookmarkCount: '56.7K',
+    shareCount: '2.9K',
   },
 ];
 
@@ -382,7 +384,9 @@ const App = (): React.ReactElement => {
         onItemVisible={handleItemVisible}
         onItemHidden={handleItemHidden}
         onCurrentItemChange={handleCurrentItemChange}
-        style={{ height: '100%' }}
+        style={{
+          height: '100%',
+        }}
         renderItemOverlay={renderVideoOverlay}
       />
 
