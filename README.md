@@ -43,9 +43,7 @@ A React component for creating vertical video feeds similar to TikTok or Instagr
 
 You can check the console for logs when scrolling to check for when a video is visible or hidden, and when the end of the feed is reached.
 
-<div style="margin: auto; width: 300px;">
-  <img src="./demo.gif" alt="React Vertical Feed Demo" width="300"/> 
-</div>
+<img src="./demo.gif" alt="React Vertical Feed Demo" width="300"/>
 
 ## Installation
 
