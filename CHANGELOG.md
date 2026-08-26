@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-26
+
+### Fixed
+
+- Keep the demo Play and Pause state correct during scrolling and keyboard playback
+- Report Space-triggered playback rejection through `onVideoError`
+
 ## [0.2.1] - 2026-08-26
 
 ### Changed
@@ -81,7 +88,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 Earlier release history is available in the [GitHub releases](https://github.com/reinaldosimoes/react-vertical-feed/releases).
 
-[Unreleased]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.21...v0.2.0
 [0.1.21]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.20...v0.1.21

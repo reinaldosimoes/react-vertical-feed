@@ -4,6 +4,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 let reducedMotion = false;
 const pausedStates = new WeakMap<HTMLMediaElement, boolean>();
+let intersectionObserverCallbacks: IntersectionObserverCallback[] = [];
 
 export const setReducedMotion = (value: boolean): void => {
   reducedMotion = value;
@@ -13,8 +14,24 @@ export const setMediaPaused = (media: HTMLMediaElement, paused: boolean): void =
   pausedStates.set(media, paused);
 };
 
+export const setItemVisibility = (
+  target: Element,
+  isIntersecting: boolean,
+  intersectionRatio: number
+): void => {
+  const entry = {
+    target,
+    isIntersecting,
+    intersectionRatio,
+  } as IntersectionObserverEntry;
+  intersectionObserverCallbacks.forEach(callback =>
+    callback([entry], {} as IntersectionObserver)
+  );
+};
+
 beforeEach(() => {
   reducedMotion = false;
+  intersectionObserverCallbacks = [];
   if (typeof window === 'undefined') return;
 
   Object.defineProperty(window, 'matchMedia', {
@@ -39,6 +56,10 @@ beforeEach(() => {
     observe = vi.fn();
     takeRecords = vi.fn(() => []);
     unobserve = vi.fn();
+
+    constructor(callback: IntersectionObserverCallback) {
+      intersectionObserverCallbacks.push(callback);
+    }
   }
 
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);

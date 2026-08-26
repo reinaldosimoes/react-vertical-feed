@@ -329,7 +329,7 @@ const App = (): React.ReactElement => {
     Record<number, { liked: boolean; bookmarked: boolean }>
   >({});
   const [isLoading, setIsLoading] = useState(false);
-  const [pausedVideos, setPausedVideos] = useState<Record<number, boolean>>({});
+  const [userPausedVideos, setUserPausedVideos] = useState<Record<number, boolean>>({});
 
   const videos: VideoItem[] = DEMO_VIDEOS.map(video => ({
     ...video,
@@ -366,9 +366,15 @@ const App = (): React.ReactElement => {
     setTimeout(() => setIsLoading(false), 2000);
   }, []);
 
-  const handleItemVisible = useCallback((item: VideoItem, index: number) => {
-    console.log(`Video ${index} is now visible`);
-  }, []);
+  const handleItemVisible = useCallback(
+    (item: VideoItem, index: number) => {
+      console.log(`Video ${index} is now visible`);
+      if (item.autoPlay !== false) {
+        setUserPausedVideos(prev => ({ ...prev, [index]: false }));
+      }
+    },
+    []
+  );
 
   const handleItemHidden = useCallback((item: VideoItem, index: number) => {
     console.log(`Video ${index} is now hidden`);
@@ -377,7 +383,7 @@ const App = (): React.ReactElement => {
   const handleCurrentItemChange = useCallback(
     (index: number) => {
       setCurrentVideoIndex(index);
-      setPausedVideos(prev => ({ ...prev, [index]: prefersReducedMotion }));
+      setUserPausedVideos(prev => ({ ...prev, [index]: prefersReducedMotion }));
     },
     [prefersReducedMotion]
   );
@@ -385,30 +391,46 @@ const App = (): React.ReactElement => {
   useEffect(() => {
     if (!prefersReducedMotion) return;
     document.querySelectorAll<HTMLVideoElement>('video').forEach(video => video.pause());
-    setPausedVideos(prev => ({ ...prev, [currentVideoIndex]: true }));
+    setUserPausedVideos(prev => ({ ...prev, [currentVideoIndex]: true }));
   }, [currentVideoIndex, prefersReducedMotion]);
-
-  const handlePlaybackStateChange = useCallback((event: React.SyntheticEvent<HTMLDivElement>) => {
-    const video = event.target as HTMLVideoElement;
-    if (video.tagName !== 'VIDEO') return;
-    const itemElement = video.closest<HTMLElement>('[data-index]');
-    const index = Number(itemElement?.dataset.index);
-    if (!Number.isInteger(index)) return;
-    setPausedVideos(prev => ({ ...prev, [index]: video.paused }));
-  }, []);
 
   const handleVideoTap = useCallback((item: VideoItem, index: number) => {
     const videoContainer = document.querySelector(`[data-index="${index}"]`);
     const video = videoContainer?.querySelector('video') as HTMLVideoElement | null;
     if (video) {
       if (video.paused) {
-        video.play().catch(() => {
-          setPausedVideos(prev => ({ ...prev, [index]: true }));
-        });
+        video
+          .play()
+          .then(() => setUserPausedVideos(prev => ({ ...prev, [index]: false })))
+          .catch(() => setUserPausedVideos(prev => ({ ...prev, [index]: true })));
       } else {
         video.pause();
+        setUserPausedVideos(prev => ({ ...prev, [index]: true }));
       }
     }
+  }, []);
+
+  const handleFeedKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement;
+      if (
+        event.key !== ' ' ||
+        !event.defaultPrevented ||
+        !target.closest('[role="feed"]')
+      ) {
+        return;
+      }
+
+      const videoContainer = document.querySelector(`[data-index="${currentVideoIndex}"]`);
+      const video = videoContainer?.querySelector('video') as HTMLVideoElement | null;
+      if (!video) return;
+      setUserPausedVideos(prev => ({ ...prev, [currentVideoIndex]: video.paused }));
+    },
+    [currentVideoIndex]
+  );
+
+  const handleVideoError = useCallback((_item: VideoItem, index: number) => {
+    setUserPausedVideos(prev => ({ ...prev, [index]: true }));
   }, []);
 
   const renderVideoOverlay = useCallback(
@@ -419,7 +441,7 @@ const App = (): React.ReactElement => {
 
       const { liked = false, bookmarked = false } = videoStates[index] || {};
       const metadata = VIDEO_METADATA[index] || VIDEO_METADATA[0];
-      const isPaused = pausedVideos[index] ?? prefersReducedMotion;
+      const isPaused = userPausedVideos[index] ?? prefersReducedMotion;
 
       return (
         <>
@@ -452,7 +474,7 @@ const App = (): React.ReactElement => {
       toggleLike,
       toggleBookmark,
       currentVideoIndex,
-      pausedVideos,
+      userPausedVideos,
       prefersReducedMotion,
       handleVideoTap,
     ]
@@ -461,8 +483,7 @@ const App = (): React.ReactElement => {
   return (
     <div
       style={{ height: '100vh', width: '100vw', backgroundColor: '#000', position: 'relative' }}
-      onPlayCapture={handlePlaybackStateChange}
-      onPauseCapture={handlePlaybackStateChange}
+      onKeyDown={handleFeedKeyDown}
     >
       <TopNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -472,6 +493,7 @@ const App = (): React.ReactElement => {
         onItemVisible={handleItemVisible}
         onItemHidden={handleItemHidden}
         onCurrentItemChange={handleCurrentItemChange}
+        onVideoError={handleVideoError}
         onItemClick={handleVideoTap}
         style={{
           height: '100%',

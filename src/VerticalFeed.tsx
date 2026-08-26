@@ -300,7 +300,11 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
             const video = currentElement?.querySelector('video') as HTMLVideoElement | null;
             if (video) {
               if (video.paused) {
-                video.play().catch(() => {});
+                const currentIndex = currentIndexRef.current;
+                const item = itemsRef.current[currentIndex];
+                video.play().catch(error => {
+                  if (item) onVideoErrorRef.current?.(item, currentIndex, error);
+                });
               } else {
                 video.pause();
               }

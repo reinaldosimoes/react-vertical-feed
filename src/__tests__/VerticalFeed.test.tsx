@@ -889,6 +889,48 @@ describe('VerticalFeed', () => {
     expect(secondPause).toHaveBeenCalledTimes(1);
   });
 
+  it('reports Space-triggered playback rejection through the public error callback', async () => {
+    const playbackError = new Error('Keyboard playback is blocked');
+    const handleVideoError = jest.fn();
+    render(<VerticalFeed items={[mockItems[0]]} onVideoError={handleVideoError} />);
+    const feed = screen.getByRole('feed');
+    const video = document.querySelector('video')!;
+    Object.defineProperties(video, {
+      paused: { get: () => true },
+      play: { value: jest.fn().mockRejectedValue(playbackError) },
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(feed, { key: ' ' });
+    });
+
+    expect(handleVideoError).toHaveBeenCalledWith(mockItems[0], 0, playbackError);
+  });
+
+  it('attributes delayed keyboard playback rejection to the item that started playback', async () => {
+    const playbackError = new Error('Delayed keyboard playback failure');
+    const handleVideoError = jest.fn();
+    let rejectPlayback!: (error: Error) => void;
+    const playback = new Promise<void>((_resolve, reject) => {
+      rejectPlayback = reject;
+    });
+    const { rerender } = render(
+      <VerticalFeed items={mockItems} onVideoError={handleVideoError} />
+    );
+    const feed = screen.getByRole('feed');
+    const video = document.querySelector('video')!;
+    Object.defineProperties(video, {
+      paused: { get: () => true },
+      play: { value: jest.fn().mockReturnValue(playback) },
+    });
+
+    fireEvent.keyDown(feed, { key: ' ' });
+    rerender(<VerticalFeed items={[mockItems[1], mockItems[0]]} onVideoError={handleVideoError} />);
+    await act(async () => rejectPlayback(playbackError));
+
+    expect(handleVideoError).toHaveBeenCalledWith(mockItems[0], 0, playbackError);
+  });
+
   it('tracks the most visible active item through overlapping transitions', () => {
     const ref = React.createRef<VerticalFeedRef>();
     const handleCurrentItemChange = jest.fn();
