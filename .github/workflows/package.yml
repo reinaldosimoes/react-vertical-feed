@@ -1,10 +1,12 @@
 name: Package and Release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
+      - '.github/workflows/package.yml'
       - 'package.json'
       - 'src/**'
       - 'rollup.config.mjs'
