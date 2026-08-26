@@ -18,7 +18,7 @@ const config = [
         sourcemap: true,
       },
       {
-        file: 'dist/index.esm.js',
+        file: 'dist/index.mjs',
         format: 'esm',
         sourcemap: true,
       },
@@ -30,6 +30,7 @@ const config = [
       typescript({
         tsconfig: './tsconfig.json',
         exclude: ['**/__tests__/**'],
+        declaration: false,
       }),
       postcss(),
       isAnalyze &&

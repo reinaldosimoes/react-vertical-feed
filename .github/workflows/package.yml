@@ -34,40 +34,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build package
-        run: npm run build
+      - name: Validate package
+        run: npm run test:release
 
       - name: Publish to npm
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          name: ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          body: |
-            ## What's Changed
-
-            ### Features
-            - Add new features
-
-            ### Bug Fixes
-            - Fix bugs
-
-            ### Dependencies
-            - Update dependencies
-
-            ### Documentation
-            - Update documentation
-
-            ### Chores
-            - Maintenance tasks
-          draft: false
-          prerelease: false
-          generate_release_notes: true

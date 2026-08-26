@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { VerticalFeed, type VideoItem } from '../../src/VerticalFeed';
 import {
+  Play,
   Heart,
   MessageCircle,
   Bookmark,
@@ -18,13 +19,12 @@ import {
   Github,
 } from 'lucide-react';
 
-// Video metadata for each video in the feed
 const VIDEO_METADATA = [
   {
     username: 'reinaldosimoes',
     caption: 'This is a demo using the react-vertical-feed npm package.',
-    audioText: 'Neural Network Dreams - AI Lofi',
-    playlistText: 'NPM Packages · 100K+ ✨',
+    audioText: 'Midnight Circuit - Lofi',
+    playlistText: 'Open Source Demos',
     likeCount: '328.4K',
     commentCount: '1.5K',
     bookmarkCount: '42.1K',
@@ -34,7 +34,7 @@ const VIDEO_METADATA = [
     username: 'reinaldosimoes',
     caption: 'You can tap on the Github button to check out the repository.',
     audioText: 'GPU Fans Go Brrr - Tech Remix',
-    playlistText: 'AI Memes · 95K+ 🤖',
+    playlistText: 'Developer Humor',
     likeCount: '267.8K',
     commentCount: '2.3K',
     bookmarkCount: '31.2K',
@@ -43,8 +43,8 @@ const VIDEO_METADATA = [
   {
     username: 'reinaldosimoes',
     caption: 'Contributions are welcome!',
-    audioText: 'Gradient Descent Vibes',
-    playlistText: 'AI Engineering · 120K+ 🚀',
+    audioText: 'Build Loop Vibes',
+    playlistText: 'Web Engineering',
     likeCount: '412.9K',
     commentCount: '3.1K',
     bookmarkCount: '56.7K',
@@ -52,7 +52,6 @@ const VIDEO_METADATA = [
   },
 ];
 
-// Top Navigation Component
 interface TopNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -86,7 +85,6 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ activeTab, onTabChange })
   );
 };
 
-// Right Sidebar Component
 interface RightSidebarProps {
   liked: boolean;
   bookmarked: boolean;
@@ -108,8 +106,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   bookmarkCount,
   shareCount,
 }) => (
-  <div className="right-sidebar">
-    {/* Profile Button */}
+  <div className="right-sidebar" onClick={event => event.stopPropagation()}>
     <div className="sidebar-item profile-button">
       <div className="profile-avatar">RS</div>
       <button className="follow-button">
@@ -117,7 +114,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       </button>
     </div>
 
-    {/* Like Button */}
     <div className="sidebar-item">
       <button className={`action-button ${liked ? 'liked' : ''}`} onClick={onLike}>
         <Heart
@@ -130,7 +126,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       </button>
     </div>
 
-    {/* Comment Button */}
     <div className="sidebar-item">
       <button className="action-button">
         <MessageCircle size={32} color="#FFFFFF" strokeWidth={2} />
@@ -138,7 +133,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       </button>
     </div>
 
-    {/* Bookmark Button */}
     <div className="sidebar-item">
       <button className={`action-button ${bookmarked ? 'bookmarked' : ''}`} onClick={onBookmark}>
         <Bookmark
@@ -151,7 +145,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       </button>
     </div>
 
-    {/* Share Button */}
     <div className="sidebar-item">
       <button className="action-button">
         <Share size={32} color="#FFFFFF" strokeWidth={2} />
@@ -159,7 +152,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       </button>
     </div>
 
-    {/* GitHub Button */}
     <div className="sidebar-item">
       <a
         href="https://github.com/reinaldosimoes/react-vertical-feed"
@@ -174,7 +166,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   </div>
 );
 
-// Bottom Overlay Component
 interface BottomOverlayProps {
   username: string;
   caption: string;
@@ -205,7 +196,6 @@ const BottomOverlay: React.FC<BottomOverlayProps> = ({
   </div>
 );
 
-// Bottom Navigation Component
 interface BottomNavigationProps {
   activeItem: string;
   onItemClick: (item: string) => void;
@@ -253,15 +243,13 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeItem, onItemC
   );
 };
 
-// Loading Indicator Component
-const LoadingIndicator: React.FC = () => (
+const loadingIndicator = (
   <div className="loading-dots">
     <div className="loading-dot" />
     <div className="loading-dot" />
   </div>
 );
 
-// Main App Component
 const App = (): React.ReactElement => {
   const [activeTab, setActiveTab] = useState('Sports');
   const [activeNavItem, setActiveNavItem] = useState('home');
@@ -270,6 +258,7 @@ const App = (): React.ReactElement => {
     Record<number, { liked: boolean; bookmarked: boolean }>
   >({});
   const [isLoading, setIsLoading] = useState(false);
+  const [pausedVideos, setPausedVideos] = useState<Record<number, boolean>>({});
 
   const videos: VideoItem[] = [
     {
@@ -321,7 +310,6 @@ const App = (): React.ReactElement => {
   const handleEndReached = useCallback(() => {
     console.log('End of feed reached');
     setIsLoading(true);
-    // Simulate loading more content
     setTimeout(() => setIsLoading(false), 2000);
   }, []);
 
@@ -335,20 +323,40 @@ const App = (): React.ReactElement => {
 
   const handleCurrentItemChange = useCallback((index: number) => {
     setCurrentVideoIndex(index);
+    setPausedVideos(prev => ({ ...prev, [index]: false }));
+  }, []);
+
+  const handleVideoTap = useCallback((item: VideoItem, index: number) => {
+    const videoContainer = document.querySelector(`[data-index="${index}"]`);
+    const video = videoContainer?.querySelector('video') as HTMLVideoElement | null;
+    if (video) {
+      if (video.paused) {
+        video.play().catch(() => {});
+        setPausedVideos(prev => ({ ...prev, [index]: false }));
+      } else {
+        video.pause();
+        setPausedVideos(prev => ({ ...prev, [index]: true }));
+      }
+    }
   }, []);
 
   const renderVideoOverlay = useCallback(
     (item: VideoItem, index: number): React.ReactNode => {
-      // Only render overlay for the currently visible video
       if (index !== currentVideoIndex) {
         return null;
       }
 
       const { liked = false, bookmarked = false } = videoStates[index] || {};
       const metadata = VIDEO_METADATA[index] || VIDEO_METADATA[0];
+      const isPaused = pausedVideos[index] ?? false;
 
       return (
         <>
+          {isPaused && (
+            <div className="pause-indicator">
+              <Play size={64} fill="#FFFFFF" color="#FFFFFF" />
+            </div>
+          )}
           <RightSidebar
             liked={liked}
             bookmarked={bookmarked}
@@ -368,7 +376,7 @@ const App = (): React.ReactElement => {
         </>
       );
     },
-    [videoStates, toggleLike, toggleBookmark, currentVideoIndex]
+    [videoStates, toggleLike, toggleBookmark, currentVideoIndex, pausedVideos]
   );
 
   return (
@@ -381,13 +389,14 @@ const App = (): React.ReactElement => {
         onItemVisible={handleItemVisible}
         onItemHidden={handleItemHidden}
         onCurrentItemChange={handleCurrentItemChange}
+        onItemClick={handleVideoTap}
         style={{
           height: '100%',
         }}
         renderItemOverlay={renderVideoOverlay}
       />
 
-      {isLoading && <LoadingIndicator />}
+      {isLoading ? loadingIndicator : null}
 
       <BottomNavigation activeItem={activeNavItem} onItemClick={setActiveNavItem} />
     </div>

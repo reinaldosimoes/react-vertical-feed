@@ -29,6 +29,20 @@ const mockIntersectionObserver = jest.fn().mockImplementation(callback => {
 
 window.IntersectionObserver = mockIntersectionObserver;
 
+const createIntersectionEntry = (
+  target: Element,
+  isIntersecting: boolean,
+  intersectionRatio: number
+): IntersectionObserverEntry => ({
+  target,
+  isIntersecting,
+  intersectionRatio,
+  boundingClientRect: {} as DOMRectReadOnly,
+  intersectionRect: {} as DOMRectReadOnly,
+  rootBounds: null,
+  time: 0,
+});
+
 describe('VerticalFeed', () => {
   const mockItems: VideoItem[] = [
     {
@@ -90,7 +104,7 @@ describe('VerticalFeed', () => {
 
   it('renders the correct number of items', () => {
     render(<VerticalFeed items={mockItems} />);
-    const items = screen.getAllByRole('region');
+    const items = screen.getAllByRole('article');
     expect(items).toHaveLength(mockItems.length);
   });
 
@@ -111,7 +125,7 @@ describe('VerticalFeed', () => {
     const handleItemClick = jest.fn();
     render(<VerticalFeed items={mockItems} onItemClick={handleItemClick} />);
 
-    const firstItem = screen.getAllByRole('region')[0];
+    const firstItem = screen.getAllByRole('article')[0];
     fireEvent.click(firstItem);
 
     expect(handleItemClick).toHaveBeenCalledWith(mockItems[0], 0);
@@ -200,10 +214,30 @@ describe('VerticalFeed', () => {
     const observerCallback = mockIntersectionObserver.mock.calls[0][0];
 
     act(() => {
-      observerCallback([{ isIntersecting: false, target: videoContainer }]);
+      observerCallback([{ isIntersecting: true, intersectionRatio: 1, target: videoContainer }]);
+      observerCallback([{ isIntersecting: false, intersectionRatio: 0, target: videoContainer }]);
     });
 
     expect(video.pause).toHaveBeenCalled();
+  });
+
+  it('pauses an initially hidden autoplay video without emitting onItemHidden', () => {
+    const handleItemHidden = jest.fn();
+    const { container } = render(
+      <VerticalFeed items={[mockItems[0]]} onItemHidden={handleItemHidden} />
+    );
+    const video = container.querySelector('video') as HTMLVideoElement;
+    const videoContainer = video.parentElement!;
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, false, 0)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(video.pause).toHaveBeenCalledTimes(1);
+    expect(handleItemHidden).not.toHaveBeenCalled();
   });
 
   it('calls onEndReached when scrolling to bottom', () => {
@@ -217,6 +251,21 @@ describe('VerticalFeed', () => {
 
     fireEvent.scroll(feed);
     expect(handleEndReached).toHaveBeenCalled();
+  });
+
+  it('does not re-arm onEndReached for an equivalent items array', () => {
+    const handleEndReached = jest.fn();
+    const { rerender } = render(<VerticalFeed items={mockItems} onEndReached={handleEndReached} />);
+    const feed = screen.getByRole('feed');
+    Object.defineProperty(feed, 'scrollHeight', { value: 1000 });
+    Object.defineProperty(feed, 'scrollTop', { value: 800 });
+    Object.defineProperty(feed, 'clientHeight', { value: 200 });
+
+    fireEvent.scroll(feed);
+    rerender(<VerticalFeed items={[...mockItems]} onEndReached={handleEndReached} />);
+    fireEvent.scroll(feed);
+
+    expect(handleEndReached).toHaveBeenCalledTimes(1);
   });
 
   it('calls onItemVisible and onItemHidden callbacks', () => {
@@ -274,6 +323,7 @@ describe('VerticalFeed', () => {
     render(<VerticalFeed items={mockItems} threshold={customThreshold} />);
 
     expect(mockIntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
+      root: screen.getByRole('feed'),
       threshold: customThreshold,
     });
   });
@@ -283,7 +333,7 @@ describe('VerticalFeed', () => {
     HTMLVideoElement.prototype.play = jest.fn().mockRejectedValue(new Error('Play failed'));
 
     render(<VerticalFeed items={mockItems} />);
-    const videoContainer = screen.getAllByRole('region')[0];
+    const videoContainer = screen.getAllByRole('article')[0];
     const observerCallback = mockIntersectionObserver.mock.calls[0][0];
 
     await act(async () => {
@@ -472,5 +522,213 @@ describe('VerticalFeed', () => {
     expect(mockObserve).toHaveBeenCalled();
     unmount();
     expect(mockDisconnect).toHaveBeenCalled();
+  });
+
+  it('does not programmatically play items with autoPlay disabled', () => {
+    const items = [{ ...mockItems[0], autoPlay: false }];
+    render(<VerticalFeed items={items} />);
+    const videoContainer = screen.getByRole('article');
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 1)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(HTMLVideoElement.prototype.play).not.toHaveBeenCalled();
+  });
+
+  it('uses threshold crossings for transition-only visibility callbacks', () => {
+    const handleItemVisible = jest.fn();
+    const handleItemHidden = jest.fn();
+    const handleCurrentItemChange = jest.fn();
+    render(
+      <VerticalFeed
+        items={[mockItems[0]]}
+        threshold={0.75}
+        onItemVisible={handleItemVisible}
+        onItemHidden={handleItemHidden}
+        onCurrentItemChange={handleCurrentItemChange}
+      />
+    );
+    const videoContainer = screen.getByRole('article');
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 0.8)],
+        {} as IntersectionObserver
+      );
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 0.9)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(handleItemVisible).toHaveBeenCalledTimes(1);
+    expect(handleCurrentItemChange).toHaveBeenCalledTimes(1);
+    expect(HTMLVideoElement.prototype.play).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 0.5)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(handleItemHidden).toHaveBeenCalledTimes(1);
+    expect(HTMLVideoElement.prototype.pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves visibility state for an equivalent items array', () => {
+    const handleItemVisible = jest.fn();
+    const handleCurrentItemChange = jest.fn();
+    const { rerender } = render(
+      <VerticalFeed
+        items={mockItems}
+        onItemVisible={handleItemVisible}
+        onCurrentItemChange={handleCurrentItemChange}
+      />
+    );
+    const videoContainer = screen.getAllByRole('article')[0];
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 1)],
+        {} as IntersectionObserver
+      );
+    });
+
+    rerender(
+      <VerticalFeed
+        items={[...mockItems]}
+        onItemVisible={handleItemVisible}
+        onCurrentItemChange={handleCurrentItemChange}
+      />
+    );
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(videoContainer, true, 1)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(mockIntersectionObserver).toHaveBeenCalledTimes(1);
+    expect(handleItemVisible).toHaveBeenCalledTimes(1);
+    expect(handleCurrentItemChange).toHaveBeenCalledTimes(1);
+    expect(HTMLVideoElement.prototype.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports native media loading errors', () => {
+    const handleVideoError = jest.fn();
+    const { container } = render(
+      <VerticalFeed items={[mockItems[0]]} onVideoError={handleVideoError} />
+    );
+
+    fireEvent.error(container.querySelector('video')!);
+
+    expect(handleVideoError).toHaveBeenCalledWith(mockItems[0], 0, expect.any(Error));
+    expect(handleVideoError.mock.calls[0][2].message).toContain(mockItems[0].src);
+  });
+
+  it('keeps loading and error state attached to stable item keys', () => {
+    const errorComponent = <div data-testid="error">Error occurred</div>;
+    const firstItems = [mockItems[0], mockItems[1]];
+    const { container, rerender } = render(
+      <VerticalFeed items={firstItems} errorComponent={errorComponent} />
+    );
+
+    fireEvent.error(container.querySelector('video')!);
+    expect(screen.getByTestId('error').closest('[data-index]')).toHaveAttribute('data-index', '0');
+
+    rerender(<VerticalFeed items={[mockItems[1], mockItems[0]]} errorComponent={errorComponent} />);
+
+    expect(screen.getByTestId('error').closest('[data-index]')).toHaveAttribute('data-index', '1');
+    expect(container.querySelector('[data-index="0"] video')).toHaveStyle({ display: 'block' });
+  });
+
+  it('keeps media state keys collision-safe', () => {
+    const firstItem = { id: 'foo', src: 'bar:baz' };
+    const secondItem = { id: 'foo:bar', src: 'baz' };
+    const errorComponent = <div data-testid="error">Error occurred</div>;
+    const { container, rerender } = render(
+      <VerticalFeed items={[firstItem]} errorComponent={errorComponent} />
+    );
+
+    fireEvent.error(container.querySelector('video')!);
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+
+    rerender(<VerticalFeed items={[secondItem]} errorComponent={errorComponent} />);
+
+    expect(screen.queryByTestId('error')).not.toBeInTheDocument();
+    expect(container.querySelector('video')).toHaveStyle({ display: 'block' });
+  });
+
+  it('rebuilds observation for formerly colliding key sequences', () => {
+    const firstItems = [
+      { src: 'one.mp4', metadata: { key: 'a|number:1' } },
+      { src: 'two.mp4', metadata: { key: 2 } },
+    ];
+    const secondItems = [
+      { src: 'one.mp4', metadata: { key: 'a' } },
+      { src: 'two.mp4', metadata: { key: 1 } },
+      { src: 'three.mp4', metadata: { key: 2 } },
+    ];
+    const getItemKey = (item: VideoItem) => item.metadata?.key as React.Key;
+    const { rerender } = render(<VerticalFeed items={firstItems} getItemKey={getItemKey} />);
+
+    rerender(<VerticalFeed items={secondItems} getItemKey={getItemKey} />);
+
+    expect(mockIntersectionObserver).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders preload-none videos while they wait for user playback', () => {
+    const { container } = render(
+      <VerticalFeed items={[{ src: 'manual.mp4', autoPlay: false, preload: 'none' }]} />
+    );
+
+    expect(container.querySelector('video')).toHaveStyle({ display: 'block' });
+  });
+
+  it('sizes items to an embedded feed and exposes ARIA feed metadata', () => {
+    render(<VerticalFeed items={mockItems} style={{ height: 400 }} />);
+    const articles = screen.getAllByRole('article');
+
+    expect(articles[0]).toHaveStyle({ height: '100%' });
+    expect(articles[0]).toHaveAttribute('aria-posinset', '1');
+    expect(articles[0]).toHaveAttribute('aria-setsize', '2');
+    expect(articles[1]).toHaveAttribute('aria-posinset', '2');
+  });
+
+  it('prevents native scrolling for handled navigation keys', () => {
+    render(<VerticalFeed items={mockItems} />);
+    const feed = screen.getByRole('feed');
+
+    expect(fireEvent.keyDown(feed, { key: 'ArrowDown' })).toBe(false);
+    expect(fireEvent.keyDown(feed, { key: 'Home' })).toBe(false);
+  });
+
+  it('activates clickable items with the keyboard', () => {
+    const handleItemClick = jest.fn();
+    render(<VerticalFeed items={[mockItems[0]]} onItemClick={handleItemClick} />);
+    const item = screen.getByRole('article');
+
+    fireEvent.keyDown(item, { key: 'Enter' });
+
+    expect(handleItemClick).toHaveBeenCalledWith(mockItems[0], 0);
+  });
+
+  it('does not hijack navigation keys from interactive overlays', () => {
+    render(
+      <VerticalFeed
+        items={[mockItems[0]]}
+        renderItemOverlay={() => <button type="button">Open menu</button>}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Open menu' }), { key: 'ArrowDown' });
+
+    expect(Element.prototype.scrollTo).not.toHaveBeenCalled();
   });
 });

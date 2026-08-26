@@ -1,11 +1,14 @@
 # React Vertical Feed
 
-[![npm](https://img.shields.io/badge/npm-react--vertical--feed-red)](https://www.npmjs.com/package/react-vertical-feed)
+[![npm version](https://img.shields.io/npm/v/react-vertical-feed.svg)](https://www.npmjs.com/package/react-vertical-feed)
+[![weekly downloads](https://img.shields.io/npm/dw/react-vertical-feed.svg)](https://www.npmjs.com/package/react-vertical-feed)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/react-vertical-feed)](https://bundlephobia.com/result?p=react-vertical-feed)
 [![CI](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml)
 [![Coverage](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml)
 
 A React component for creating vertical video feeds similar to TikTok or Instagram. This component provides a smooth, performant way to display vertical videos with automatic play/pause based on visibility.
+
+It ships with no runtime dependencies beyond React, a typed API, and both CommonJS and ES module builds.
 
 ## Table of Contents
 
@@ -29,13 +32,14 @@ A React component for creating vertical video feeds similar to TikTok or Instagr
 ## Features
 
 - 🎥 Automatic video play/pause based on visibility
+- 🎯 Threshold-aware, transition-only visibility callbacks
 - ⌨️ Keyboard navigation support (Arrow keys, Space, Home, End)
 - ♿️ Accessibility features
-- 📱 Mobile-friendly
+- 📱 Full-screen and embedded feed layouts
 - 🎨 Customizable loading and error states
 - 🔄 Video loop and poster image support
-- ⚡️ Performance optimized with stable refs
-- 📦 TypeScript support
+- ⚡️ Browser-native preload control and stable observers
+- 📦 TypeScript, CommonJS, and ES module support
 
 ## Demo
 
@@ -56,117 +60,103 @@ yarn add react-vertical-feed
 ## Usage
 
 ```tsx
+import { VerticalFeed, type VideoItem } from 'react-vertical-feed';
+
+const videos: VideoItem[] = [
+  {
+    id: 'intro',
+    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    loop: true,
+  },
+  {
+    id: 'demo',
+    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    loop: true,
+  },
+];
+
+export function App() {
+  return <VerticalFeed items={videos} style={{ height: '100dvh' }} />;
+}
+```
+
+Videos are muted, inline, and autoplaying by default so browser autoplay policies work with the feed. Set `autoPlay: false` or override any video option per item.
+
+### Embedded feeds
+
+Items size themselves to the feed container, so the same component works in a card or modal:
+
+```tsx
+<VerticalFeed items={videos} style={{ height: 480, borderRadius: 16 }} />
+```
+
+### Interactive overlays
+
+Use `renderItemOverlay` for captions and controls. Stop click propagation on interactive controls when the feed itself has an `onItemClick` handler.
+
+```tsx
+<VerticalFeed
+  items={videos}
+  onItemClick={(item, index) => console.log('Selected', item.id, index)}
+  renderItemOverlay={(item, index) => (
+    <button
+      type="button"
+      onClick={event => {
+        event.stopPropagation();
+        console.log('Liked', item.id, index);
+      }}
+      style={{ position: 'absolute', right: 24, bottom: 24 }}
+    >
+      Like
+    </button>
+  )}
+/>
+```
+
+### Next.js App Router
+
+`VerticalFeed` uses browser APIs, so render it from a Client Component:
+
+```tsx
+'use client';
+
 import { VerticalFeed } from 'react-vertical-feed';
-import { Heart } from 'lucide-react';
 
-const App = () => {
-  const [videoStates, setVideoStates] = useState<Record<number, { liked: boolean }>>({});
+const videos = [
+  {
+    id: 'intro',
+    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  },
+];
 
-  const videos = [
-    {
-      src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-      controls: true,
-      autoPlay: true,
-      muted: true,
-      playsInline: true,
-    },
-    // ... more videos
-  ];
-
-  const handleEndReached = () => {
-    console.log('End reached');
-  };
-
-  const renderVideoOverlay = (item: VideoItem, index: number) => {
-    const { liked = false } = videoStates[index] || {};
-
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          right: '20px',
-          bottom: '100px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            background: 'rgba(0, 0, 0, 0.5)',
-            borderRadius: '12px',
-            padding: '8px',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              setVideoStates(prev => ({
-                ...prev,
-                [index]: { liked: !prev[index]?.liked },
-              }));
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            <Heart
-              size={32}
-              fill={liked ? '#ff2d55' : 'none'}
-              color={liked ? '#ff2d55' : 'white'}
-            />
-            <span style={{ color: 'white', fontSize: '14px' }}>{liked ? 'Liked' : 'Like'}</span>
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="w-full h-screen">
-      <VerticalFeed
-        items={videos}
-        onEndReached={handleEndReached}
-        className="h-full"
-        renderItemOverlay={renderVideoOverlay}
-      />
-    </div>
-  );
-};
+export default function VideoFeed() {
+  return <VerticalFeed items={videos} />;
+}
 ```
 
 ## API Reference
 
 ### Props
 
-| Prop                  | Type                                                     | Default      | Description                                  |
-| --------------------- | -------------------------------------------------------- | ------------ | -------------------------------------------- |
-| `items`               | `VideoItem[]`                                            | **required** | Array of video items                         |
-| `onEndReached`        | `() => void`                                             | -            | Callback when user scrolls to the end        |
-| `loadingComponent`    | `React.ReactNode`                                        | -            | Custom loading component                     |
-| `errorComponent`      | `React.ReactNode`                                        | -            | Custom error component                       |
-| `className`           | `string`                                                 | -            | Additional CSS class                         |
-| `style`               | `React.CSSProperties`                                    | -            | Additional CSS styles                        |
-| `onItemVisible`       | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes visible           |
-| `onItemHidden`        | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes hidden            |
-| `onItemClick`         | `(item: VideoItem, index: number) => void`               | -            | Callback when item is clicked                |
-| `threshold`           | `number`                                                 | `0.75`       | Intersection observer threshold              |
-| `scrollBehavior`      | `ScrollBehavior`                                         | `'smooth'`   | Scroll behavior for keyboard navigation      |
-| `renderItemOverlay`   | `(item: VideoItem, index: number) => React.ReactNode`    | -            | Custom overlay component for each item       |
-| `endReachedThreshold` | `number`                                                 | `100`        | Distance from bottom to trigger onEndReached |
-| `onVideoError`        | `(item: VideoItem, index: number, error: Error) => void` | -            | Callback when video playback fails           |
-| `onCurrentItemChange` | `(index: number) => void`                                | -            | Callback when current visible item changes   |
-| `defaultPreload`      | `'none' \| 'metadata' \| 'auto'`                         | `'metadata'` | Default preload strategy for videos          |
+| Prop                  | Type                                                     | Default      | Description                                   |
+| --------------------- | -------------------------------------------------------- | ------------ | --------------------------------------------- |
+| `items`               | `VideoItem[]`                                            | **required** | Array of video items                          |
+| `onEndReached`        | `() => void`                                             | -            | Callback when user scrolls to the end         |
+| `loadingComponent`    | `React.ReactNode`                                        | -            | Custom loading component                      |
+| `errorComponent`      | `React.ReactNode`                                        | -            | Custom error component                        |
+| `className`           | `string`                                                 | -            | Additional CSS class                          |
+| `style`               | `React.CSSProperties`                                    | -            | Additional CSS styles                         |
+| `onItemVisible`       | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes visible            |
+| `onItemHidden`        | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes hidden             |
+| `onItemClick`         | `(item: VideoItem, index: number) => void`               | -            | Callback when item is clicked                 |
+| `threshold`           | `number`                                                 | `0.75`       | Intersection observer threshold               |
+| `scrollBehavior`      | `ScrollBehavior`                                         | `'smooth'`   | Scroll behavior for keyboard navigation       |
+| `renderItemOverlay`   | `(item: VideoItem, index: number) => React.ReactNode`    | -            | Custom overlay component for each item        |
+| `endReachedThreshold` | `number`                                                 | `100`        | Distance from bottom to trigger onEndReached  |
+| `onVideoError`        | `(item: VideoItem, index: number, error: Error) => void` | -            | Callback when video loading or playback fails |
+| `onCurrentItemChange` | `(index: number) => void`                                | -            | Callback when current visible item changes    |
+| `defaultPreload`      | `'none' \| 'metadata' \| 'auto'`                         | `'metadata'` | Default preload strategy for videos           |
+| `getItemKey`          | `(item: VideoItem, index: number) => React.Key`          | `id`/index   | Stable key for reordered or prepended items   |
 
 ### Types
 
@@ -189,6 +179,8 @@ interface VerticalFeedRef {
   getCurrentItem: () => number;
 }
 ```
+
+Give dynamic items an `id`, or provide `getItemKey`, so loading and error state stays attached to the correct item when a feed is reordered or prepended.
 
 ### Keyboard Navigation
 
@@ -233,29 +225,22 @@ const App = () => {
 
 ## Browser Compatibility
 
-This package is compatible with all modern browsers that support:
+This package ships ES2020 JavaScript for modern evergreen browsers. Consumers that support older browsers should transpile dependencies according to their own browser targets.
+
+The runtime also requires:
 
 - Intersection Observer API
 - CSS Scroll Snap
 - HTML5 Video
 
-| Browser | Version |
-| ------- | ------- |
-| Chrome  | 51+     |
-| Firefox | 55+     |
-| Safari  | 12.1+   |
-| Edge    | 16+     |
-| Opera   | 38+     |
-
 ## Performance
 
 The component is optimized for performance with:
 
-- Lazy loading of videos
-- Automatic cleanup of resources
-- Efficient intersection observer usage
-- Minimal re-renders
-- Optimized scroll handling
+- Browser-native video preload controls
+- Automatic observer cleanup
+- One container-rooted Intersection Observer
+- Transition-only visibility callbacks
 
 ## Development
 

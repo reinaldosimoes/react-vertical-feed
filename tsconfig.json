@@ -1,11 +1,9 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "ES2020",
     "module": "esnext",
-    "jsx": "react-jsx",
+    "jsx": "react",
     "strict": true,
-    "declaration": true,
-    "declarationDir": "./dist/dts",
     "outDir": "./dist",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -13,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "./src"
   },
-  "include": ["src"],
+  "include": ["src/index.ts", "src/VerticalFeed.tsx", "src/setupTests.ts"],
   "exclude": ["node_modules", "dist"]
 }

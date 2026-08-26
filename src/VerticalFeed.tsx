@@ -48,6 +48,8 @@ export interface VerticalFeedProps {
   onCurrentItemChange?: (index: number) => void;
   /** Default preload strategy for videos (default: 'metadata') */
   defaultPreload?: 'none' | 'metadata' | 'auto';
+  /** Returns a stable key for items that may be reordered or prepended */
+  getItemKey?: (item: VideoItem, index: number) => React.Key;
 }
 
 export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
@@ -69,16 +71,19 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
       onVideoError,
       onCurrentItemChange,
       defaultPreload = 'metadata',
+      getItemKey,
     },
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [loadingStates, setLoadingStates] = useState<Record<number, boolean>>({});
-    const [errorStates, setErrorStates] = useState<Record<number, boolean>>({});
+    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+    const [errorStates, setErrorStates] = useState<Record<string, boolean>>({});
     const currentIndexRef = useRef(0);
+    const hasCurrentItemRef = useRef(false);
     const endReachedCalledRef = useRef(false);
+    const activeEntriesRef = useRef<Map<Element, number>>(new Map());
+    const itemsRef = useRef(items);
 
-    // Stable refs for callbacks to avoid recreating IntersectionObserver
     const onItemVisibleRef = useRef(onItemVisible);
     const onItemHiddenRef = useRef(onItemHidden);
     const onVideoErrorRef = useRef(onVideoError);
@@ -89,9 +94,57 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
       onItemHiddenRef.current = onItemHidden;
       onVideoErrorRef.current = onVideoError;
       onCurrentItemChangeRef.current = onCurrentItemChange;
+      itemsRef.current = items;
     });
 
-    // Imperative handle for programmatic control
+    const getItemKeyValue = useCallback(
+      (item: VideoItem, index: number) => getItemKey?.(item, index) ?? item.id ?? index,
+      [getItemKey]
+    );
+
+    const getMediaStateKey = useCallback(
+      (item: VideoItem, index: number) => {
+        const itemKey = getItemKeyValue(item, index);
+        return JSON.stringify([typeof itemKey, String(itemKey), item.src]);
+      },
+      [getItemKeyValue]
+    );
+
+    const mediaStateKeys = useMemo(
+      () => new Set(items.map((item, index) => getMediaStateKey(item, index))),
+      [items, getMediaStateKey]
+    );
+
+    const observerKey = useMemo(() => {
+      const itemKeys = items.map((item, index) => {
+        const itemKey = getItemKeyValue(item, index);
+        return [typeof itemKey, String(itemKey)];
+      });
+      return JSON.stringify(itemKeys);
+    }, [items, getItemKeyValue]);
+
+    useEffect(() => {
+      const pruneState = (state: Record<string, boolean>) => {
+        const entries = Object.entries(state).filter(([key]) => mediaStateKeys.has(key));
+        return entries.length === Object.keys(state).length ? state : Object.fromEntries(entries);
+      };
+
+      setLoadingStates(pruneState);
+      setErrorStates(pruneState);
+
+      if (items.length === 0) {
+        currentIndexRef.current = 0;
+        hasCurrentItemRef.current = false;
+      } else if (currentIndexRef.current >= items.length) {
+        currentIndexRef.current = items.length - 1;
+        hasCurrentItemRef.current = false;
+      }
+    }, [items.length, mediaStateKeys]);
+
+    useEffect(() => {
+      endReachedCalledRef.current = false;
+    }, [items.length]);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -107,57 +160,100 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
       [scrollBehavior, items.length]
     );
 
-    const handleMediaLoad = useCallback((index: number) => {
-      setLoadingStates(prev => ({ ...prev, [index]: false }));
+    const handleMediaLoad = useCallback((stateKey: string) => {
+      setLoadingStates(prev => ({ ...prev, [stateKey]: false }));
     }, []);
 
-    const handleMediaError = useCallback((index: number) => {
-      setErrorStates(prev => ({ ...prev, [index]: true }));
-      setLoadingStates(prev => ({ ...prev, [index]: false }));
+    const handleMediaError = useCallback((stateKey: string, item: VideoItem, index: number) => {
+      setErrorStates(prev => ({ ...prev, [stateKey]: true }));
+      setLoadingStates(prev => ({ ...prev, [stateKey]: false }));
+      onVideoErrorRef.current?.(item, index, new Error(`Failed to load video: ${item.src}`));
     }, []);
 
     useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const activeEntries = activeEntriesRef.current;
+      activeEntries.clear();
+
       const observer = new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
-            const index = parseInt(entry.target.getAttribute('data-index') || '0', 10);
-            const item = items[index];
+            const indexAttribute = entry.target.getAttribute('data-index');
+            if (indexAttribute === null) return;
 
-            if (entry.isIntersecting) {
-              const video = entry.target.querySelector('video') as HTMLVideoElement;
-              if (video) {
-                video.play().catch(error => {
-                  if (onVideoErrorRef.current) {
-                    onVideoErrorRef.current(item, index, error);
-                  } else {
-                    console.error('Error playing video:', error);
-                  }
-                });
+            const index = Number.parseInt(indexAttribute, 10);
+            const item = itemsRef.current[index];
+            if (!item || Number.isNaN(index)) return;
+
+            const intersectionRatio = entry.intersectionRatio ?? (entry.isIntersecting ? 1 : 0);
+            const isVisible = entry.isIntersecting && intersectionRatio >= threshold;
+            const wasVisible = activeEntries.has(entry.target);
+            const video = entry.target.querySelector('video') as HTMLVideoElement | null;
+
+            if (isVisible) {
+              activeEntries.set(entry.target, intersectionRatio);
+
+              if (!wasVisible) {
+                if (video && item.autoPlay !== false) {
+                  video.play().catch(error => {
+                    if (onVideoErrorRef.current) {
+                      onVideoErrorRef.current(item, index, error);
+                    } else {
+                      console.error('Error playing video:', error);
+                    }
+                  });
+                }
+                onItemVisibleRef.current?.(item, index);
               }
-              currentIndexRef.current = index;
-              onCurrentItemChangeRef.current?.(index);
-              onItemVisibleRef.current?.(item, index);
             } else {
-              const video = entry.target.querySelector('video') as HTMLVideoElement;
-              if (video) {
-                video.pause();
+              activeEntries.delete(entry.target);
+              video?.pause();
+
+              if (wasVisible) {
+                onItemHiddenRef.current?.(item, index);
               }
-              onItemHiddenRef.current?.(item, index);
             }
           });
+
+          let nextIndex: number | null = null;
+          let highestRatio = -1;
+
+          activeEntries.forEach((ratio, element) => {
+            const indexAttribute = element.getAttribute('data-index');
+            if (indexAttribute === null || ratio <= highestRatio) return;
+
+            const index = Number.parseInt(indexAttribute, 10);
+            if (!Number.isNaN(index) && itemsRef.current[index]) {
+              nextIndex = index;
+              highestRatio = ratio;
+            }
+          });
+
+          if (
+            nextIndex !== null &&
+            (!hasCurrentItemRef.current || currentIndexRef.current !== nextIndex)
+          ) {
+            currentIndexRef.current = nextIndex;
+            hasCurrentItemRef.current = true;
+            onCurrentItemChangeRef.current?.(nextIndex);
+          }
         },
         {
+          root: container,
           threshold,
         }
       );
 
-      const mediaElements = containerRef.current?.querySelectorAll('[data-index]') || [];
+      const mediaElements = container.querySelectorAll('[data-index]');
       mediaElements.forEach(media => observer.observe(media));
 
       return () => {
         observer.disconnect();
+        activeEntries.clear();
       };
-    }, [items, threshold]);
+    }, [observerKey, threshold]);
 
     const handleScroll = useCallback(() => {
       if (!containerRef.current || !onEndReached) return;
@@ -168,7 +264,6 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
         endReachedCalledRef.current = true;
         onEndReached();
       } else if (!isNearEnd) {
-        // Reset the flag when user scrolls away from the end
         endReachedCalledRef.current = false;
       }
     }, [onEndReached, endReachedThreshold]);
@@ -176,6 +271,14 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (!containerRef.current) return;
+
+        const target = e.target as HTMLElement;
+        if (
+          target !== e.currentTarget &&
+          target.closest('button, a, input, textarea, select, [contenteditable="true"]')
+        ) {
+          return;
+        }
 
         const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
         const scrollAmount = clientHeight;
@@ -197,24 +300,28 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
             break;
           }
           case 'ArrowDown':
+            e.preventDefault();
             containerRef.current.scrollTo?.({
               top: scrollTop + scrollAmount,
               behavior: scrollBehavior,
             });
             break;
           case 'ArrowUp':
+            e.preventDefault();
             containerRef.current.scrollTo?.({
               top: scrollTop - scrollAmount,
               behavior: scrollBehavior,
             });
             break;
           case 'Home':
+            e.preventDefault();
             containerRef.current.scrollTo?.({
               top: 0,
               behavior: scrollBehavior,
             });
             break;
           case 'End':
+            e.preventDefault();
             containerRef.current.scrollTo?.({
               top: scrollHeight,
               behavior: scrollBehavior,
@@ -227,25 +334,37 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
 
     const defaultRenderItem = useCallback(
       (item: VideoItem, index: number) => {
-        const isLoading = loadingStates[index] ?? true;
-        const hasError = errorStates[index] ?? false;
+        const itemKey = getItemKeyValue(item, index);
+        const stateKey = getMediaStateKey(item, index);
+        const isLoading = loadingStates[stateKey] ?? true;
+        const hasError = errorStates[stateKey] ?? false;
 
         return (
           <div
-            key={item.id || index}
+            key={itemKey}
             data-index={index}
             onClick={() => onItemClick?.(item, index)}
+            onKeyDown={event => {
+              if (event.target === event.currentTarget && onItemClick && event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                onItemClick(item, index);
+              }
+            }}
+            tabIndex={onItemClick ? 0 : undefined}
             style={{
-              height: '100vh',
+              height: '100%',
               scrollSnapAlign: 'start',
               position: 'relative',
               cursor: onItemClick ? 'pointer' : 'default',
             }}
-            role="region"
+            role="article"
             aria-label={`Video ${index + 1}`}
+            aria-posinset={index + 1}
+            aria-setsize={items.length}
           >
-            {isLoading && loadingComponent}
-            {hasError && errorComponent}
+            {isLoading ? loadingComponent : null}
+            {hasError ? errorComponent : null}
             <video
               src={item.src}
               muted={item.muted ?? true}
@@ -255,13 +374,13 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
               loop={item.loop ?? false}
               poster={item.poster}
               preload={item.preload ?? defaultPreload}
-              onLoadedData={() => handleMediaLoad(index)}
-              onError={() => handleMediaError(index)}
+              onLoadedData={() => handleMediaLoad(stateKey)}
+              onError={() => handleMediaError(stateKey, item, index)}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                display: isLoading || hasError ? 'none' : 'block',
+                display: hasError && errorComponent ? 'none' : 'block',
               }}
             />
             {renderItemOverlay && renderItemOverlay(item, index)}
@@ -278,6 +397,9 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
         onItemClick,
         renderItemOverlay,
         defaultPreload,
+        getItemKeyValue,
+        getMediaStateKey,
+        items.length,
       ]
     );
 
@@ -299,7 +421,6 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
           height: '100vh',
           overflowY: 'scroll',
           scrollSnapType: 'y mandatory',
-          outline: 'none',
           ...style,
         }}
       >

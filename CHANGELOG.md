@@ -1,93 +1,69 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
-
-### [0.1.21](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.20...v0.1.21) (2025-01-18)
-
-### Features
-
-* **VideoItem**: add `loop`, `poster`, and `preload` properties for enhanced video control
-* **VerticalFeedProps**: add `endReachedThreshold` prop to configure scroll-end detection distance (default: 100px)
-* **VerticalFeedProps**: add `onVideoError` callback for handling video playback failures
-* **VerticalFeedProps**: add `onCurrentItemChange` callback to track current visible item
-* **VerticalFeedProps**: add `defaultPreload` prop for configuring default video preload strategy
-* **keyboard**: add Space bar support to play/pause current video
-* **keyboard**: add Home/End key support to scroll to beginning/end of feed
-* **demo**: enhance video feed demo app with new components and improved functionality
-
-### Improvements
-
-* Use stable refs for callbacks to prevent IntersectionObserver recreation on re-renders
-* Reset endReached flag when user scrolls away from the end to allow re-triggering
-
-### [0.1.19](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.18...v0.1.19) (2025-05-15)
-
-### Chores
-
-* Dependency updates
-
-### [0.1.18](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.17...v0.1.18) (2025-05-14)
-
-### [0.1.16](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.15...v0.1.16) (2025-04-19)
-
-### [0.1.15](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.14...v0.1.15) (2025-04-10)
-
-### [0.1.12](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.11...v0.1.12) (2025-04-10)
-
-### [0.1.11](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.9...v0.1.11) (2025-04-10)
-
-
-### Features
-
-* add CodeSandbox demo example ([75eb134](https://github.com/reinaldosimoes/react-vertical-feed/commit/75eb134d34955605dadf5458a551746b81639cba))
-
-
-### Bug Fixes
-
-* prevent double v prefix in GitHub releases ([fa05082](https://github.com/reinaldosimoes/react-vertical-feed/commit/fa05082c6e6489e4e32a7dacff13204e4905c10f))
-* revert version back to 0.1.10 ([842a3f8](https://github.com/reinaldosimoes/react-vertical-feed/commit/842a3f8ed39c2c63ab367b9076d0bdab3c3e049d))
-* update demo package.json with correct local dependency path ([f228ab7](https://github.com/reinaldosimoes/react-vertical-feed/commit/f228ab7348368e3e6fe06008177e244f450fede6))
-
-### [0.1.11](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.9...v0.1.11) (2025-04-10)
-
-
-### Features
-
-* add CodeSandbox demo example ([75eb134](https://github.com/reinaldosimoes/react-vertical-feed/commit/75eb134d34955605dadf5458a551746b81639cba))
-
-
-### Bug Fixes
-
-* prevent double v prefix in GitHub releases ([fa05082](https://github.com/reinaldosimoes/react-vertical-feed/commit/fa05082c6e6489e4e32a7dacff13204e4905c10f))
-* update demo package.json with correct local dependency path ([f228ab7](https://github.com/reinaldosimoes/react-vertical-feed/commit/f228ab7348368e3e6fe06008177e244f450fede6))
-
-### [0.1.9](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.8...v0.1.9) (2025-04-10)
-
-
-### Features
-
-* husky for pre-commit ([2641384](https://github.com/reinaldosimoes/react-vertical-feed/commit/2641384b2d98a176f6763def5f69a5b9b83a9ec4))
-* update husky for v10 ([29eca98](https://github.com/reinaldosimoes/react-vertical-feed/commit/29eca98f00629f28958b3fa94551b4cb6f856048))
-* update unit tests ([48aa35d](https://github.com/reinaldosimoes/react-vertical-feed/commit/48aa35d2dfc8b3e92c85b6c19baa9e83719ae6fa))
-
-### [0.1.8](https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.2...v0.1.8) (2025-04-10)
-
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-25
+
 ### Added
 
-- Initial release with support for vertical video and image feeds
-- Automatic play/pause for videos based on visibility
-- Customizable loading and error states
-- Keyboard navigation support
-- Accessibility features
-- Custom item rendering support
-- Click handlers for items
-- Configurable scroll behavior and thresholds
+- Stable `getItemKey` support for dynamic feeds
+- Explicit CommonJS and ES module package exports
+- Package installation smoke tests for both module formats and React 17
+- Keyboard activation and ARIA position metadata for feed items
+
+### Changed
+
+- Size feed items to their container so embedded feeds work correctly
+- Root visibility tracking to the feed container and honor the configured threshold
+- Emit visibility and current-item callbacks only when state changes
+- Keep videos visible while browser loading is deferred
+- Refresh compatible development dependencies and remove known audit findings
+- Replace the README opening with a dependency-free quick start and tested recipes
+- Clean build output before every package build
+
+### Fixed
+
+- Respect `autoPlay: false` when an item becomes visible
+- Keep loading and error state attached to stable items after reordering
+- Report native media loading failures through `onVideoError`
+- Prevent handled navigation keys from also scrolling the page
+- Avoid toggling demo playback when an overlay control is clicked
+- Exclude test declarations and stale build artifacts from the published package
+
+## [0.1.21] - 2026-01-18
+
+### Added
+
+- Video loop, poster, and preload options
+- End-reached threshold configuration
+- Playback error and current-item callbacks
+- Space, Home, and End keyboard controls
+- Expanded interactive demo
+
+### Changed
+
+- Keep callback refs stable to avoid unnecessary observer recreation
+- Allow end-reached callbacks to fire again after leaving the threshold
+- Refresh development dependencies
+
+## [0.1.20] - 2025-10-20
+
+### Changed
+
+- Refresh development dependencies and transitive security fixes
+
+## [0.1.19] - 2025-10-20
+
+### Changed
+
+- Refresh development dependencies
+
+Earlier release history is available in the [GitHub releases](https://github.com/reinaldosimoes/react-vertical-feed/releases).
+
+[Unreleased]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.21...v0.2.0
+[0.1.21]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.20...v0.1.21
+[0.1.20]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.19...v0.1.20
+[0.1.19]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.18...v0.1.19
