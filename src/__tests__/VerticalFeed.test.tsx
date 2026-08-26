@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { VerticalFeed, VideoItem } from '../VerticalFeed';
+import { VerticalFeed, VerticalFeedRef, VideoItem } from '../VerticalFeed';
 
 // Extend Window interface
 declare global {
@@ -164,6 +164,17 @@ describe('VerticalFeed', () => {
     const feed = screen.getByRole('feed');
     expect(feed).toHaveClass(className);
     expect(feed).toHaveStyle(style);
+  });
+
+  it('contains vertical overscroll while allowing a style override', () => {
+    const { rerender } = render(<VerticalFeed items={mockItems} />);
+    const feed = screen.getByRole('feed');
+
+    expect(feed.style.overscrollBehaviorY).toBe('contain');
+
+    rerender(<VerticalFeed items={mockItems} style={{ overscrollBehaviorY: 'auto' }} />);
+
+    expect(feed.style.overscrollBehaviorY).toBe('auto');
   });
 
   it('handles video load events correctly', () => {
@@ -356,6 +367,21 @@ describe('VerticalFeed', () => {
         behavior: customScrollBehavior,
       })
     );
+  });
+
+  it('scrolls within the feed without moving ancestor scrollers', () => {
+    const ref = React.createRef<VerticalFeedRef>();
+    render(<VerticalFeed ref={ref} items={mockItems} />);
+
+    const feed = screen.getByRole('feed');
+    const target = screen.getAllByRole('article')[1];
+    Object.defineProperty(feed, 'scrollTop', { value: 40, configurable: true });
+    jest.spyOn(feed, 'getBoundingClientRect').mockReturnValue({ top: 100 } as DOMRect);
+    jest.spyOn(target, 'getBoundingClientRect').mockReturnValue({ top: 500 } as DOMRect);
+
+    ref.current?.scrollToItem(1, 'auto');
+
+    expect(Element.prototype.scrollTo).toHaveBeenCalledWith({ top: 440, behavior: 'auto' });
   });
 
   it('handles scroll events when containerRef is null', () => {
@@ -730,5 +756,294 @@ describe('VerticalFeed', () => {
     fireEvent.keyDown(screen.getByRole('button', { name: 'Open menu' }), { key: 'ArrowDown' });
 
     expect(Element.prototype.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('does not hijack navigation keys from native video controls or ARIA widgets', () => {
+    const { container } = render(
+      <VerticalFeed
+        items={[mockItems[0]]}
+        renderItemOverlay={() => <div role="slider" aria-label="Seek" tabIndex={0} />}
+      />
+    );
+
+    fireEvent.keyDown(container.querySelector('video')!, { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Seek' }), { key: 'Home' });
+
+    expect(Element.prototype.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('keeps keyboard navigation inside a nested scrollable page', () => {
+    render(
+      <main
+        data-testid="page-scroller"
+        style={{ height: 600, overflowY: 'auto' }}
+        onScroll={event => event.stopPropagation()}
+      >
+        <div style={{ height: 1200 }}>
+          <VerticalFeed items={mockItems} style={{ height: 320 }} scrollBehavior="auto" />
+        </div>
+      </main>
+    );
+
+    const page = screen.getByTestId('page-scroller');
+    const feed = screen.getByRole('feed');
+    const feedScrollTo = jest.fn();
+    Object.defineProperties(page, {
+      scrollTop: { value: 480, writable: true },
+      clientHeight: { value: 600 },
+      scrollHeight: { value: 1200 },
+    });
+    Object.defineProperties(feed, {
+      scrollTop: { value: 320, writable: true },
+      clientHeight: { value: 320 },
+      scrollHeight: { value: 640 },
+      scrollTo: { value: feedScrollTo },
+    });
+
+    fireEvent.keyDown(feed, { key: 'ArrowDown' });
+    fireEvent.keyDown(feed, { key: 'Home' });
+    fireEvent.keyDown(feed, { key: 'End' });
+
+    expect(feedScrollTo.mock.calls).toEqual([
+      [{ top: 640, behavior: 'auto' }],
+      [{ top: 0, behavior: 'auto' }],
+      [{ top: 640, behavior: 'auto' }],
+    ]);
+    expect(page.scrollTop).toBe(480);
+    expect(feed.style.overscrollBehaviorY).toBe('contain');
+  });
+
+  it('lets native editing controls and contenteditable overlays own their keys', () => {
+    const { container } = render(
+      <VerticalFeed
+        items={[mockItems[0]]}
+        renderItemOverlay={() => (
+          <div>
+            <input aria-label="Caption" defaultValue="A caption" />
+            <textarea aria-label="Comment" defaultValue="A comment" />
+            <a href="#details">Details</a>
+            <div contentEditable suppressContentEditableWarning>
+              Editable caption
+            </div>
+            <div role="switch" aria-checked="false" tabIndex={0}>
+              Autoplay
+            </div>
+          </div>
+        )}
+      />
+    );
+
+    const ownedKeyEvents: Array<[Element, string]> = [
+      [screen.getByRole('textbox', { name: 'Caption' }), 'Home'],
+      [screen.getByRole('textbox', { name: 'Comment' }), 'End'],
+      [screen.getByRole('link', { name: 'Details' }), 'ArrowDown'],
+      [container.querySelector('[contenteditable="true"]')!, ' '],
+      [screen.getByRole('switch', { name: 'Autoplay' }), 'ArrowUp'],
+    ];
+
+    for (const [target, key] of ownedKeyEvents) {
+      expect(fireEvent.keyDown(target, { key })).toBe(true);
+    }
+
+    expect(Element.prototype.scrollTo).not.toHaveBeenCalled();
+    expect(HTMLVideoElement.prototype.play).not.toHaveBeenCalled();
+    expect(HTMLVideoElement.prototype.pause).not.toHaveBeenCalled();
+  });
+
+  it('toggles playback for the current item with Space', async () => {
+    render(<VerticalFeed items={mockItems} />);
+    const feed = screen.getByRole('feed');
+    const articles = screen.getAllByRole('article');
+    const videos = document.querySelectorAll('video');
+    const firstPlay = jest.fn().mockResolvedValue(undefined);
+    const secondPlay = jest.fn().mockResolvedValue(undefined);
+    const secondPause = jest.fn();
+    let secondIsPaused = true;
+    Object.defineProperties(videos[0], {
+      play: { value: firstPlay },
+    });
+    Object.defineProperties(videos[1], {
+      paused: { get: () => secondIsPaused },
+      play: { value: secondPlay },
+      pause: { value: secondPause },
+    });
+
+    await act(async () => {
+      observerCallback(
+        [
+          createIntersectionEntry(articles[0], true, 0.8),
+          createIntersectionEntry(articles[1], true, 0.95),
+        ],
+        {} as IntersectionObserver
+      );
+    });
+    firstPlay.mockClear();
+    secondPlay.mockClear();
+
+    expect(fireEvent.keyDown(feed, { key: ' ' })).toBe(false);
+    expect(secondPlay).toHaveBeenCalledTimes(1);
+    expect(firstPlay).not.toHaveBeenCalled();
+
+    secondIsPaused = false;
+    expect(fireEvent.keyDown(feed, { key: ' ' })).toBe(false);
+    expect(secondPause).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks the most visible active item through overlapping transitions', () => {
+    const ref = React.createRef<VerticalFeedRef>();
+    const handleCurrentItemChange = jest.fn();
+    render(
+      <VerticalFeed ref={ref} items={mockItems} onCurrentItemChange={handleCurrentItemChange} />
+    );
+    const articles = screen.getAllByRole('article');
+
+    act(() => {
+      observerCallback(
+        [
+          createIntersectionEntry(articles[0], true, 0.8),
+          createIntersectionEntry(articles[1], true, 0.95),
+        ],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(ref.current?.getCurrentItem()).toBe(1);
+    expect(handleCurrentItemChange).toHaveBeenLastCalledWith(1);
+
+    act(() => {
+      observerCallback(
+        [createIntersectionEntry(articles[1], false, 0)],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(ref.current?.getCurrentItem()).toBe(0);
+    expect(handleCurrentItemChange.mock.calls).toEqual([[1], [0]]);
+  });
+
+  it('uses the latest callbacks without rebuilding observation', () => {
+    const firstVisible = jest.fn();
+    const secondVisible = jest.fn();
+    const firstCurrent = jest.fn();
+    const secondCurrent = jest.fn();
+    const { rerender } = render(
+      <VerticalFeed
+        items={mockItems}
+        onItemVisible={firstVisible}
+        onCurrentItemChange={firstCurrent}
+      />
+    );
+
+    rerender(
+      <VerticalFeed
+        items={[...mockItems]}
+        onItemVisible={secondVisible}
+        onCurrentItemChange={secondCurrent}
+      />
+    );
+    const article = screen.getAllByRole('article')[0];
+
+    act(() => {
+      observerCallback([createIntersectionEntry(article, true, 1)], {} as IntersectionObserver);
+    });
+
+    expect(mockIntersectionObserver).toHaveBeenCalledTimes(1);
+    expect(firstVisible).not.toHaveBeenCalled();
+    expect(firstCurrent).not.toHaveBeenCalled();
+    expect(secondVisible).toHaveBeenCalledWith(mockItems[0], 0);
+    expect(secondCurrent).toHaveBeenCalledWith(0);
+  });
+
+  it('reports autoplay rejection through the public error callback', async () => {
+    const playbackError = new Error('Autoplay is blocked');
+    const handleVideoError = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    HTMLVideoElement.prototype.play = jest.fn().mockRejectedValue(playbackError);
+    render(<VerticalFeed items={[mockItems[0]]} onVideoError={handleVideoError} />);
+    const article = screen.getByRole('article');
+
+    await act(async () => {
+      observerCallback([createIntersectionEntry(article, true, 1)], {} as IntersectionObserver);
+    });
+
+    expect(handleVideoError).toHaveBeenCalledWith(mockItems[0], 0, playbackError);
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('re-arms end reached only after leaving the boundary or adding items', () => {
+    const handleEndReached = jest.fn();
+    const { rerender } = render(
+      <VerticalFeed items={mockItems} onEndReached={handleEndReached} endReachedThreshold={100} />
+    );
+    const feed = screen.getByRole('feed');
+    Object.defineProperties(feed, {
+      scrollTop: { value: 650, writable: true },
+      clientHeight: { value: 250 },
+      scrollHeight: { value: 1000 },
+    });
+
+    fireEvent.scroll(feed);
+    fireEvent.scroll(feed);
+    expect(handleEndReached).toHaveBeenCalledTimes(1);
+
+    feed.scrollTop = 400;
+    fireEvent.scroll(feed);
+    feed.scrollTop = 650;
+    fireEvent.scroll(feed);
+    expect(handleEndReached).toHaveBeenCalledTimes(2);
+
+    rerender(
+      <VerticalFeed
+        items={[...mockItems, { src: 'test-video-3.mp4', id: '3' }]}
+        onEndReached={handleEndReached}
+        endReachedThreshold={100}
+      />
+    );
+    fireEvent.scroll(feed);
+
+    expect(handleEndReached).toHaveBeenCalledTimes(3);
+  });
+
+  it('uses ref geometry, configured defaults, and safe index bounds', () => {
+    const ref = React.createRef<VerticalFeedRef>();
+    const { rerender } = render(<VerticalFeed ref={ref} items={mockItems} scrollBehavior="auto" />);
+    const feed = screen.getByRole('feed');
+    const secondItem = screen.getAllByRole('article')[1];
+    const feedScrollTo = jest.fn();
+    Object.defineProperties(feed, {
+      scrollTop: { value: 75, configurable: true },
+      scrollTo: { value: feedScrollTo },
+    });
+    jest.spyOn(feed, 'getBoundingClientRect').mockReturnValue({ top: 100 } as DOMRect);
+    jest.spyOn(secondItem, 'getBoundingClientRect').mockReturnValue({ top: 425 } as DOMRect);
+
+    ref.current?.scrollToItem(-1);
+    ref.current?.scrollToItem(mockItems.length);
+    expect(feedScrollTo).not.toHaveBeenCalled();
+
+    ref.current?.scrollToItem(1);
+    expect(feedScrollTo).toHaveBeenLastCalledWith({ top: 400, behavior: 'auto' });
+
+    rerender(<VerticalFeed ref={ref} items={mockItems} scrollBehavior="smooth" />);
+    ref.current?.scrollToItem(1);
+    expect(feedScrollTo).toHaveBeenLastCalledWith({ top: 400, behavior: 'smooth' });
+  });
+
+  it('clamps the public current-item index when the collection shrinks', () => {
+    const ref = React.createRef<VerticalFeedRef>();
+    const { rerender } = render(<VerticalFeed ref={ref} items={mockItems} />);
+    const secondItem = screen.getAllByRole('article')[1];
+
+    act(() => {
+      observerCallback([createIntersectionEntry(secondItem, true, 1)], {} as IntersectionObserver);
+    });
+    expect(ref.current?.getCurrentItem()).toBe(1);
+
+    rerender(<VerticalFeed ref={ref} items={[mockItems[0]]} />);
+    expect(ref.current?.getCurrentItem()).toBe(0);
+
+    rerender(<VerticalFeed ref={ref} items={[]} />);
+    expect(ref.current?.getCurrentItem()).toBe(0);
   });
 });

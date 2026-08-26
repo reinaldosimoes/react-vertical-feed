@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { VerticalFeed, type VideoItem } from '../../src/VerticalFeed';
 import {
   Play,
+  Pause,
   Heart,
   MessageCircle,
   Bookmark,
@@ -52,6 +53,30 @@ const VIDEO_METADATA = [
   },
 ];
 
+const demoVideoPath = (filename: string) => `${import.meta.env.BASE_URL}videos/${filename}`;
+
+const DEMO_VIDEOS = [
+  { id: 'clouds', src: demoVideoPath('clouds.mp4') },
+  { id: 'wind', src: demoVideoPath('wind.mp4') },
+  { id: 'grasshopper', src: demoVideoPath('grasshopper.mp4') },
+] as const;
+
+const usePrefersReducedMotion = (): boolean => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  return prefersReducedMotion;
+};
+
 interface TopNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -62,15 +87,18 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ activeTab, onTabChange })
 
   return (
     <div className="top-navigation">
-      <div className="top-nav-center">
+      <div className="top-nav-center" role="tablist" aria-label="Video categories">
         {tabs.map(tab => (
-          <span
+          <button
+            type="button"
             key={tab}
             className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => onTabChange(tab)}
+            role="tab"
+            aria-selected={activeTab === tab}
           >
             {tab}
-          </span>
+          </button>
         ))}
       </div>
       <div className="top-nav-right">
@@ -94,6 +122,8 @@ interface RightSidebarProps {
   commentCount: string;
   bookmarkCount: string;
   shareCount: string;
+  isPaused: boolean;
+  onTogglePlayback: () => void;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -105,18 +135,27 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   commentCount,
   bookmarkCount,
   shareCount,
+  isPaused,
+  onTogglePlayback,
 }) => (
   <div className="right-sidebar" onClick={event => event.stopPropagation()}>
     <div className="sidebar-item profile-button">
       <div className="profile-avatar">RS</div>
-      <button className="follow-button">
-        <Plus size={12} strokeWidth={3} color="#FFFFFF" />
+      <button type="button" className="follow-button" aria-label="Follow reinaldosimoes">
+        <Plus aria-hidden="true" size={12} strokeWidth={3} color="#FFFFFF" />
       </button>
     </div>
 
     <div className="sidebar-item">
-      <button className={`action-button ${liked ? 'liked' : ''}`} onClick={onLike}>
+      <button
+        type="button"
+        className={`action-button ${liked ? 'liked' : ''}`}
+        onClick={onLike}
+        aria-label={`Like, ${likeCount} likes`}
+        aria-pressed={liked}
+      >
         <Heart
+          aria-hidden="true"
           size={32}
           fill={liked ? '#FF0050' : 'none'}
           color={liked ? '#FF0050' : '#FFFFFF'}
@@ -127,15 +166,22 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     </div>
 
     <div className="sidebar-item">
-      <button className="action-button">
-        <MessageCircle size={32} color="#FFFFFF" strokeWidth={2} />
+      <button type="button" className="action-button" aria-label={`Comments, ${commentCount}`}>
+        <MessageCircle aria-hidden="true" size={32} color="#FFFFFF" strokeWidth={2} />
         <span className="action-count">{commentCount}</span>
       </button>
     </div>
 
     <div className="sidebar-item">
-      <button className={`action-button ${bookmarked ? 'bookmarked' : ''}`} onClick={onBookmark}>
+      <button
+        type="button"
+        className={`action-button ${bookmarked ? 'bookmarked' : ''}`}
+        onClick={onBookmark}
+        aria-label={`Bookmark, ${bookmarkCount} bookmarks`}
+        aria-pressed={bookmarked}
+      >
         <Bookmark
+          aria-hidden="true"
           size={32}
           fill={bookmarked ? '#FFD700' : 'none'}
           color={bookmarked ? '#FFD700' : '#FFFFFF'}
@@ -146,9 +192,25 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     </div>
 
     <div className="sidebar-item">
-      <button className="action-button">
-        <Share size={32} color="#FFFFFF" strokeWidth={2} />
+      <button type="button" className="action-button" aria-label={`Share, ${shareCount} shares`}>
+        <Share aria-hidden="true" size={32} color="#FFFFFF" strokeWidth={2} />
         <span className="action-count">{shareCount}</span>
+      </button>
+    </div>
+
+    <div className="sidebar-item">
+      <button
+        type="button"
+        className="action-button playback-button"
+        onClick={onTogglePlayback}
+        aria-label={isPaused ? 'Play video' : 'Pause video'}
+      >
+        {isPaused ? (
+          <Play aria-hidden="true" size={32} fill="#FFFFFF" color="#FFFFFF" />
+        ) : (
+          <Pause aria-hidden="true" size={32} fill="#FFFFFF" color="#FFFFFF" />
+        )}
+        <span className="action-count">{isPaused ? 'Play' : 'Pause'}</span>
       </button>
     </div>
 
@@ -216,27 +278,35 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeItem, onItemC
         const Icon = item.icon;
         if (item.special) {
           return (
-            <div key={item.id} className="nav-item" onClick={() => onItemClick(item.id)}>
+            <button
+              type="button"
+              key={item.id}
+              className="nav-item"
+              onClick={() => onItemClick(item.id)}
+              aria-label="Create"
+            >
               <div className="create-button">
                 <div className="create-button-inner">
                   <Plus size={20} strokeWidth={3} />
                 </div>
               </div>
-            </div>
+            </button>
           );
         }
         return (
-          <div
+          <button
+            type="button"
             key={item.id}
             className={`nav-item ${activeItem === item.id ? 'active' : ''}`}
             onClick={() => onItemClick(item.id)}
+            aria-current={activeItem === item.id ? 'page' : undefined}
           >
             <div className="nav-item-icon">
               <Icon size={24} fill={activeItem === item.id ? '#FFFFFF' : 'none'} />
               {item.badge && <span className="notification-badge">{item.badge}</span>}
             </div>
             <span className="nav-item-label">{item.label}</span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -251,6 +321,7 @@ const loadingIndicator = (
 );
 
 const App = (): React.ReactElement => {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [activeTab, setActiveTab] = useState('Sports');
   const [activeNavItem, setActiveNavItem] = useState('home');
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -260,32 +331,14 @@ const App = (): React.ReactElement => {
   const [isLoading, setIsLoading] = useState(false);
   const [pausedVideos, setPausedVideos] = useState<Record<number, boolean>>({});
 
-  const videos: VideoItem[] = [
-    {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-      controls: false,
-      autoPlay: true,
-      muted: true,
-      playsInline: true,
-      loop: true,
-    },
-    {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4',
-      controls: false,
-      autoPlay: true,
-      muted: true,
-      playsInline: true,
-      loop: true,
-    },
-    {
-      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-      controls: false,
-      autoPlay: true,
-      muted: true,
-      playsInline: true,
-      loop: true,
-    },
-  ];
+  const videos: VideoItem[] = DEMO_VIDEOS.map(video => ({
+    ...video,
+    controls: false,
+    autoPlay: !prefersReducedMotion,
+    muted: true,
+    playsInline: true,
+    loop: true,
+  }));
 
   const toggleLike = useCallback((index: number) => {
     setVideoStates(prev => ({
@@ -321,9 +374,27 @@ const App = (): React.ReactElement => {
     console.log(`Video ${index} is now hidden`);
   }, []);
 
-  const handleCurrentItemChange = useCallback((index: number) => {
-    setCurrentVideoIndex(index);
-    setPausedVideos(prev => ({ ...prev, [index]: false }));
+  const handleCurrentItemChange = useCallback(
+    (index: number) => {
+      setCurrentVideoIndex(index);
+      setPausedVideos(prev => ({ ...prev, [index]: prefersReducedMotion }));
+    },
+    [prefersReducedMotion]
+  );
+
+  useEffect(() => {
+    if (!prefersReducedMotion) return;
+    document.querySelectorAll<HTMLVideoElement>('video').forEach(video => video.pause());
+    setPausedVideos(prev => ({ ...prev, [currentVideoIndex]: true }));
+  }, [currentVideoIndex, prefersReducedMotion]);
+
+  const handlePlaybackStateChange = useCallback((event: React.SyntheticEvent<HTMLDivElement>) => {
+    const video = event.target as HTMLVideoElement;
+    if (video.tagName !== 'VIDEO') return;
+    const itemElement = video.closest<HTMLElement>('[data-index]');
+    const index = Number(itemElement?.dataset.index);
+    if (!Number.isInteger(index)) return;
+    setPausedVideos(prev => ({ ...prev, [index]: video.paused }));
   }, []);
 
   const handleVideoTap = useCallback((item: VideoItem, index: number) => {
@@ -331,11 +402,11 @@ const App = (): React.ReactElement => {
     const video = videoContainer?.querySelector('video') as HTMLVideoElement | null;
     if (video) {
       if (video.paused) {
-        video.play().catch(() => {});
-        setPausedVideos(prev => ({ ...prev, [index]: false }));
+        video.play().catch(() => {
+          setPausedVideos(prev => ({ ...prev, [index]: true }));
+        });
       } else {
         video.pause();
-        setPausedVideos(prev => ({ ...prev, [index]: true }));
       }
     }
   }, []);
@@ -348,7 +419,7 @@ const App = (): React.ReactElement => {
 
       const { liked = false, bookmarked = false } = videoStates[index] || {};
       const metadata = VIDEO_METADATA[index] || VIDEO_METADATA[0];
-      const isPaused = pausedVideos[index] ?? false;
+      const isPaused = pausedVideos[index] ?? prefersReducedMotion;
 
       return (
         <>
@@ -364,6 +435,8 @@ const App = (): React.ReactElement => {
             commentCount={metadata.commentCount}
             bookmarkCount={metadata.bookmarkCount}
             shareCount={metadata.shareCount}
+            isPaused={isPaused}
+            onTogglePlayback={() => handleVideoTap(item, index)}
           />
           <BottomOverlay
             username={metadata.username}
@@ -374,11 +447,23 @@ const App = (): React.ReactElement => {
         </>
       );
     },
-    [videoStates, toggleLike, toggleBookmark, currentVideoIndex, pausedVideos]
+    [
+      videoStates,
+      toggleLike,
+      toggleBookmark,
+      currentVideoIndex,
+      pausedVideos,
+      prefersReducedMotion,
+      handleVideoTap,
+    ]
   );
 
   return (
-    <div style={{ height: '100vh', width: '100vw', backgroundColor: '#000', position: 'relative' }}>
+    <div
+      style={{ height: '100vh', width: '100vw', backgroundColor: '#000', position: 'relative' }}
+      onPlayCapture={handlePlaybackStateChange}
+      onPauseCapture={handlePlaybackStateChange}
+    >
       <TopNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <VerticalFeed

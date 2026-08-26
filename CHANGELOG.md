@@ -8,13 +8,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Changed
 
-- Validate remote demo media before deploying GitHub Pages
+- Validate the demo media assets before each GitHub Pages deployment
+- Use three distinct, self-hosted CC0 portrait clips in the demo
+- Document scroll containment, keyboard input, reduced motion, and demo media provenance
+- Add UI, media-structure, and browser scroll-isolation tests for the demo
 
 ### Fixed
 
-- Restore demo playback after the previous sample video host stopped serving the files
-- Animate the pause indicator on both pause and resume, with reduced-motion support
-- Replace broken video URLs in the README examples
+- Restore demo playback after the previous video host stopped serving the sample files
+- Animate the pause indicator when playback pauses or resumes
+- Remove optional demo animations when the user requests reduced motion
+- Prevent an embedded feed from chaining vertical overscroll to the browser page
+- Keep `scrollToItem` navigation inside the feed container
+- Let native controls and supported ARIA controls process their own keyboard input
+- Replace the broken video URLs in the README examples
 
 ## [0.2.0] - 2026-08-25
 

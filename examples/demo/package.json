@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:media": "node scripts/verify-media.mjs"
+    "test": "npm run test:ui && npm run test:media && npm run test:e2e",
+    "test:e2e": "playwright test",
+    "test:ui": "vitest run src/App.test.tsx",
+    "test:media": "vitest run scripts/verify-media.test.ts && node scripts/verify-media.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.510.0",
@@ -16,10 +19,16 @@
     "react-vertical-feed": "file:../.."
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^4.7.0",
+    "jsdom": "^29.1.1",
     "typescript": "^5.9.3",
-    "vite": "^6.4.3"
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11"
   }
 }

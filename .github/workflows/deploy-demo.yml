@@ -31,7 +31,8 @@ jobs:
       - name: Build Demo
         run: |
           cd examples/demo
-          npm run test:media
+          npx playwright install --with-deps chromium
+          npm test
           npm run build
 
       - name: Setup Pages

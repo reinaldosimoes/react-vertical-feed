@@ -149,10 +149,16 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
       ref,
       () => ({
         scrollToItem: (index: number, behavior: ScrollBehavior = scrollBehavior) => {
-          if (!containerRef.current || index < 0 || index >= items.length) return;
-          const targetElement = containerRef.current.querySelector(`[data-index="${index}"]`);
+          const container = containerRef.current;
+          if (!container || index < 0 || index >= items.length) return;
+          const targetElement = container.querySelector<HTMLElement>(`[data-index="${index}"]`);
           if (targetElement) {
-            targetElement.scrollIntoView({ behavior, block: 'start' });
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+            container.scrollTo({
+              top: container.scrollTop + targetRect.top - containerRect.top,
+              behavior,
+            });
           }
         },
         getCurrentItem: () => currentIndexRef.current,
@@ -275,7 +281,9 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
         const target = e.target as HTMLElement;
         if (
           target !== e.currentTarget &&
-          target.closest('button, a, input, textarea, select, [contenteditable="true"]')
+          target.closest(
+            'button, a, input, textarea, select, video[controls], [contenteditable="true"], [role="button"], [role="slider"], [role="link"], [role="textbox"], [role="checkbox"], [role="radio"], [role="switch"], [role="tab"]'
+          )
         ) {
           return;
         }
@@ -420,6 +428,7 @@ export const VerticalFeed = forwardRef<VerticalFeedRef, VerticalFeedProps>(
         style={{
           height: '100vh',
           overflowY: 'scroll',
+          overscrollBehaviorY: 'contain',
           scrollSnapType: 'y mandatory',
           ...style,
         }}

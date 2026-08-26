@@ -6,9 +6,9 @@
 [![CI](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/package.yml)
 [![Coverage](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml/badge.svg)](https://github.com/reinaldosimoes/react-vertical-feed/actions/workflows/coverage.yml)
 
-A React component for creating vertical video feeds similar to TikTok or Instagram. This component provides a smooth, performant way to display vertical videos with automatic play/pause based on visibility.
+A React component for a vertical video feed. Each item fills the feed container. The component uses scroll snap and item visibility to control playback.
 
-It ships with no runtime dependencies beyond React, a typed API, and both CommonJS and ES module builds.
+The package declares no runtime dependencies. It requires React and React DOM as peer dependencies. The package includes TypeScript types, a CommonJS build, and an ES module build.
 
 ## Table of Contents
 
@@ -22,6 +22,7 @@ It ships with no runtime dependencies beyond React, a typed API, and both Common
     - [Props](#props)
     - [Types](#types)
     - [Keyboard Navigation](#keyboard-navigation)
+    - [Reduced Motion](#reduced-motion)
     - [Programmatic Control](#programmatic-control)
   - [Browser Compatibility](#browser-compatibility)
   - [Performance](#performance)
@@ -31,10 +32,11 @@ It ships with no runtime dependencies beyond React, a typed API, and both Common
 
 ## Features
 
-- 🎥 Automatic video play/pause based on visibility
+- 🎥 Automatic video playback based on visibility
 - 🎯 Threshold-aware, transition-only visibility callbacks
+- 🧱 Contained vertical overscroll by default
 - ⌨️ Keyboard navigation support (Arrow keys, Space, Home, End)
-- ♿️ Accessibility features
+- ♿️ ARIA feed and item metadata
 - 📱 Full-screen and embedded feed layouts
 - 🎨 Customizable loading and error states
 - 🔄 Video loop and poster image support
@@ -45,7 +47,7 @@ It ships with no runtime dependencies beyond React, a typed API, and both Common
 
 [Live Demo](https://reinaldosimoes.github.io/react-vertical-feed/)
 
-You can check the console for logs when scrolling to check for when a video is visible or hidden, and when the end of the feed is reached.
+Open the browser console to see visibility and end-of-feed events.
 
 <img src="./demo.gif" alt="React Vertical Feed Demo" width="300"/>
 
@@ -80,19 +82,29 @@ export function App() {
 }
 ```
 
-Videos are muted, inline, and autoplaying by default so browser autoplay policies work with the feed. Set `autoPlay: false` or override any video option per item.
+Videos are muted, inline, and set to autoplay by default. These defaults support browser autoplay rules. Set `autoPlay: false` on an item to turn off autoplay for that item.
 
 ### Embedded feeds
 
-Items size themselves to the feed container, so the same component works in a card or modal:
+Each item uses the size of the feed container. Set the container height when you put the feed in a card or modal.
 
 ```tsx
 <VerticalFeed items={videos} style={{ height: 480, borderRadius: 16 }} />
 ```
 
+The feed sets `overscrollBehaviorY` to `contain` by default. This setting prevents vertical scroll chaining when the feed reaches its first or last item. The browser page does not continue the same wheel or touch scroll.
+
+Set `overscrollBehaviorY` to `auto` when you want the browser page to continue scrolling at a feed boundary:
+
+```tsx
+<VerticalFeed items={videos} style={{ height: 480, overscrollBehaviorY: 'auto' }} />
+```
+
+The `style` prop overrides the default component styles.
+
 ### Interactive overlays
 
-Use `renderItemOverlay` for captions and controls. Stop click propagation on interactive controls when the feed itself has an `onItemClick` handler.
+Use `renderItemOverlay` for captions and controls. Stop click propagation on each interactive control when the feed has an `onItemClick` handler.
 
 ```tsx
 <VerticalFeed
@@ -145,7 +157,7 @@ export default function VideoFeed() {
 | `loadingComponent`    | `React.ReactNode`                                        | -            | Custom loading component                      |
 | `errorComponent`      | `React.ReactNode`                                        | -            | Custom error component                        |
 | `className`           | `string`                                                 | -            | Additional CSS class                          |
-| `style`               | `React.CSSProperties`                                    | -            | Additional CSS styles                         |
+| `style`               | `React.CSSProperties`                                    | -            | Styles that override the default feed styles  |
 | `onItemVisible`       | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes visible            |
 | `onItemHidden`        | `(item: VideoItem, index: number) => void`               | -            | Callback when item becomes hidden             |
 | `onItemClick`         | `(item: VideoItem, index: number) => void`               | -            | Callback when item is clicked                 |
@@ -180,7 +192,7 @@ interface VerticalFeedRef {
 }
 ```
 
-Give dynamic items an `id`, or provide `getItemKey`, so loading and error state stays attached to the correct item when a feed is reordered or prepended.
+Give each dynamic item an `id`. You can also provide `getItemKey`. A stable key keeps loading and error state with the correct item after a reorder or prepend operation.
 
 ### Keyboard Navigation
 
@@ -192,9 +204,21 @@ Give dynamic items an `id`, or provide `getItemKey`, so loading and error state 
 | `Home`  | Scroll to first video    |
 | `End`   | Scroll to last video     |
 
+Move keyboard focus to the feed before you use these keys. The feed prevents the browser page from performing the same keyboard scroll.
+
+An interactive overlay control owns its keyboard input. The feed does not handle a navigation key when the focused element is a button, link, form control, editable element, or supported interactive ARIA role.
+
+When you provide `onItemClick`, each item can receive keyboard focus. Press Enter to activate the focused item.
+
+### Reduced Motion
+
+The package does not read the `prefers-reduced-motion` media query. Your application controls autoplay and animation behavior.
+
+The demo reads this media query. When the user requests reduced motion, the demo turns off video autoplay and pauses all videos. The demo also removes the pause-indicator transition and its decorative marquee, like, and loading animations. The user can still start a video with the Play control or a tap.
+
 ### Programmatic Control
 
-You can control the feed programmatically using a ref:
+Use a ref to control the feed:
 
 ```tsx
 import { useRef } from 'react';
@@ -225,7 +249,7 @@ const App = () => {
 
 ## Browser Compatibility
 
-This package ships ES2020 JavaScript for modern evergreen browsers. Consumers that support older browsers should transpile dependencies according to their own browser targets.
+This package ships ES2020 JavaScript for current evergreen browsers. If your application supports an older browser, transpile this package for your browser targets.
 
 The runtime also requires:
 
@@ -235,7 +259,7 @@ The runtime also requires:
 
 ## Performance
 
-The component is optimized for performance with:
+The component uses these performance controls:
 
 - Browser-native video preload controls
 - Automatic observer cleanup
@@ -245,8 +269,8 @@ The component is optimized for performance with:
 ## Development
 
 ```bash
-# Install dependencies
-npm install
+# Install the locked dependencies
+npm ci
 
 # Run development server
 npm run dev
@@ -267,13 +291,32 @@ npm test
 npm run test:coverage
 ```
 
+Run the complete package and demo checks from the repository root:
+
+```bash
+# Verify the package tests, lint, build, size, package contents, and audit
+npm run test:release
+
+# Install the locked demo dependencies
+npm --prefix examples/demo ci
+
+# Install the Chromium test browser
+npm --prefix examples/demo exec -- playwright install chromium
+
+# Run the demo UI, media, and browser tests
+npm --prefix examples/demo test
+
+# Type-check and build the demo
+npm --prefix examples/demo run build
+```
+
 ### Test Coverage
 
-Test coverage reports are generated for each pull request and can be found in the GitHub Actions artifacts. To view the coverage report:
+The Coverage workflow creates a coverage report for each pull request. To read the report:
 
-1. Go to the latest workflow run
-2. Click on the "coverage-report" artifact
-3. Download and open the `index.html` file in your browser
+1. Open the latest Coverage workflow run.
+2. Download the `coverage-report` artifact.
+3. Open `index.html` in a browser.
 
 ## License
 
