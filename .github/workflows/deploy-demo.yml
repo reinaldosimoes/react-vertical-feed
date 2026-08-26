@@ -31,6 +31,7 @@ jobs:
       - name: Build Demo
         run: |
           cd examples/demo
+          npm run test:media
           npm run build
 
       - name: Setup Pages

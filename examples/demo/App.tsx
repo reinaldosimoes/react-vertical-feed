@@ -262,7 +262,7 @@ const App = (): React.ReactElement => {
 
   const videos: VideoItem[] = [
     {
-      src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
       controls: false,
       autoPlay: true,
       muted: true,
@@ -270,7 +270,7 @@ const App = (): React.ReactElement => {
       loop: true,
     },
     {
-      src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4',
       controls: false,
       autoPlay: true,
       muted: true,
@@ -278,7 +278,7 @@ const App = (): React.ReactElement => {
       loop: true,
     },
     {
-      src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
       controls: false,
       autoPlay: true,
       muted: true,
@@ -352,11 +352,9 @@ const App = (): React.ReactElement => {
 
       return (
         <>
-          {isPaused && (
-            <div className="pause-indicator">
-              <Play size={64} fill="#FFFFFF" color="#FFFFFF" />
-            </div>
-          )}
+          <div className={`pause-indicator ${isPaused ? 'visible' : ''}`} aria-hidden="true">
+            <Play size={64} fill="#FFFFFF" color="#FFFFFF" />
+          </div>
           <RightSidebar
             liked={liked}
             bookmarked={bookmarked}

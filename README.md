@@ -65,12 +65,12 @@ import { VerticalFeed, type VideoItem } from 'react-vertical-feed';
 const videos: VideoItem[] = [
   {
     id: 'intro',
-    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     loop: true,
   },
   {
     id: 'demo',
-    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4',
     loop: true,
   },
 ];
@@ -125,7 +125,7 @@ import { VerticalFeed } from 'react-vertical-feed';
 const videos = [
   {
     id: 'intro',
-    src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
   },
 ];
 

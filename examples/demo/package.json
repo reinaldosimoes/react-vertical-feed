@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:media": "node scripts/verify-media.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.510.0",

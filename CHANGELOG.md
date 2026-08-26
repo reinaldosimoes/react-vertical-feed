@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-26
+
+### Changed
+
+- Validate remote demo media before deploying GitHub Pages
+
+### Fixed
+
+- Restore demo playback after the previous sample video host stopped serving the files
+- Animate the pause indicator on both pause and resume, with reduced-motion support
+- Replace broken video URLs in the README examples
+
 ## [0.2.0] - 2026-08-25
 
 ### Added
@@ -62,7 +74,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 Earlier release history is available in the [GitHub releases](https://github.com/reinaldosimoes/react-vertical-feed/releases).
 
-[Unreleased]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.21...v0.2.0
 [0.1.21]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/reinaldosimoes/react-vertical-feed/compare/v0.1.19...v0.1.20
